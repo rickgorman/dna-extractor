@@ -19,15 +19,15 @@ NC='\033[0m' # No Color
 # Script location (the cloned repo)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Source: the skill folder containing everything
-SKILL_FOLDER="${SCRIPT_DIR}/skills/dna-extractor"
-COMMAND_SOURCE="${SKILL_FOLDER}/command.md"
+# Source paths (mirrors ~/.claude/ structure)
+SKILL_SOURCE="${SCRIPT_DIR}/skills/dna-extractor-skill"
+COMMAND_SOURCE="${SCRIPT_DIR}/commands/dna-extractor.md"
 
 # Installation targets
 COMMANDS_DIR="${HOME}/.claude/commands"
 SKILLS_DIR="${HOME}/.claude/skills"
 
-SKILL_TARGET="${SKILLS_DIR}/dna-extractor"
+SKILL_TARGET="${SKILLS_DIR}/dna-extractor-skill"
 COMMAND_TARGET="${COMMANDS_DIR}/dna-extractor.md"
 
 #------------------------------------------------------------------------------
@@ -60,8 +60,8 @@ prompt() {
 validate_source_files() {
     local missing=0
 
-    if [[ ! -d "$SKILL_FOLDER" ]]; then
-        error "Skill folder not found: $SKILL_FOLDER"
+    if [[ ! -d "$SKILL_SOURCE" ]]; then
+        error "Skill folder not found: $SKILL_SOURCE"
         missing=1
     fi
 
@@ -70,8 +70,8 @@ validate_source_files() {
         missing=1
     fi
 
-    if [[ ! -f "${SKILL_FOLDER}/SKILL.md" ]]; then
-        error "SKILL.md not found in: $SKILL_FOLDER"
+    if [[ ! -f "${SKILL_SOURCE}/SKILL.md" ]]; then
+        error "SKILL.md not found in: $SKILL_SOURCE"
         missing=1
     fi
 
@@ -109,13 +109,13 @@ ask_yes_no() {
 #------------------------------------------------------------------------------
 
 explain_actions() {
-    echo "This installer will create two symlinks:"
+    echo "This installer will create:"
     echo ""
-    echo "  1. Skill folder (includes prompts, templates, SKILL.md):"
-    echo "     ${SKILL_TARGET} -> ${SKILL_FOLDER}"
+    echo "  1. Skill folder symlink:"
+    echo "     ${SKILL_TARGET} -> ${SKILL_SOURCE}"
     echo ""
-    echo "  2. Command (enables /dna-extractor):"
-    echo "     ${COMMAND_TARGET} -> ${COMMAND_SOURCE}"
+    echo "  2. Command file (with paths configured):"
+    echo "     ${COMMAND_TARGET}"
     echo ""
     echo "After installation:"
     echo "  - Restart Claude Code (or start a new session)"
@@ -133,7 +133,7 @@ perform_installation() {
     fi
 
     # Create skill folder symlink
-    ln -s "$SKILL_FOLDER" "$SKILL_TARGET"
+    ln -s "$SKILL_SOURCE" "$SKILL_TARGET"
     if [[ -L "$SKILL_TARGET" ]]; then
         info "Skill folder: $SKILL_TARGET"
     else
@@ -141,17 +141,17 @@ perform_installation() {
         return 1
     fi
 
-    # Remove existing command symlink if present
+    # Remove existing command file if present
     if [[ -e "$COMMAND_TARGET" || -L "$COMMAND_TARGET" ]]; then
         rm -f "$COMMAND_TARGET"
     fi
 
-    # Create command symlink
-    ln -s "$COMMAND_SOURCE" "$COMMAND_TARGET"
-    if [[ -L "$COMMAND_TARGET" ]]; then
-        info "Command: $COMMAND_TARGET"
+    # Copy command file with @SKILL_DIR@ replaced by actual skill target path
+    sed "s|@SKILL_DIR@|${SKILL_TARGET}|g" "$COMMAND_SOURCE" > "$COMMAND_TARGET"
+    if [[ -f "$COMMAND_TARGET" ]]; then
+        info "Command file: $COMMAND_TARGET"
     else
-        error "Failed to create command symlink"
+        error "Failed to install command file"
         return 1
     fi
 
@@ -203,7 +203,7 @@ main() {
         echo "  /dna-extractor <repo-path> --level=snapshot  # Quick scan"
         echo "  /dna-extractor --help                        # Show help"
         echo ""
-        echo -e "${YELLOW}Important:${NC} Keep this repo - symlinks point here!"
+        echo -e "${YELLOW}Important:${NC} Keep this repo - skill symlink points here!"
         echo "  Location: ${SCRIPT_DIR}"
         echo ""
     else

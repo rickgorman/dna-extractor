@@ -40,7 +40,7 @@ Task 1: Structure Scout
 - Identify frameworks (package.json, requirements.txt, Cargo.toml, etc.)
 - Map directory layout
 - Check for monorepo signals
-- Reference: ./prompts/phase1/structure-scout.md
+- Reference: @SKILL_DIR@/prompts/phase1/structure-scout.md
 
 Task 2: Config Scout
 - Parse package.json, pyproject.toml, Cargo.toml, go.mod
@@ -75,7 +75,7 @@ Task 5: Domain Modeler (if models detected)
 - Map relationships (has_many, belongs_to, foreign keys)
 - Detect state machines
 - Identify invariants/validations
-- Reference: ./prompts/phase2/domain-modeler.md
+- Reference: @SKILL_DIR@/prompts/phase2/domain-modeler.md
 
 Task 6: API Extractor (if API detected)
 - Document endpoints (routes, methods)
@@ -101,7 +101,7 @@ Task 10: Infrastructure Analyst (if IaC detected)
 - Parse Dockerfile, docker-compose
 - Analyze Terraform/CloudFormation
 - Identify CI/CD patterns
-- Reference: ./prompts/phase2/infrastructure-analyst.md
+- Reference: @SKILL_DIR@/prompts/phase2/infrastructure-analyst.md
 
 Task 11: User Story Extractor (ALWAYS run)
 - Mine README for user intent and personas
@@ -109,7 +109,7 @@ Task 11: User Story Extractor (ALWAYS run)
 - Parse CLI --help for use cases
 - Scan docs/ for user guides
 - Output 2-4 primary user stories + feature inventory
-- Reference: ./prompts/phase2/user-story-extractor.md
+- Reference: @SKILL_DIR@/prompts/phase2/user-story-extractor.md
 ```
 
 **Spawn ALL applicable specialists in a SINGLE message.**
@@ -124,9 +124,9 @@ Only after Phase 2 completes, run synthesis in main context:
 
 1. **Conflict Resolution**: Merge findings, resolve contradictions
 2. **Confidence Scoring**: Rate each finding (certain/inferred/speculated)
-   - Reference: ./prompts/phase3/confidence-scorer.md
+   - Reference: @SKILL_DIR@/prompts/phase3/confidence-scorer.md
 3. **DNA Rendering**: Generate final output using template
-   - Reference: ./templates/dna-template.md
+   - Reference: @SKILL_DIR@/templates/dna-template.md
 
 ---
 

@@ -42,9 +42,9 @@ cd dna-extractor
 ./install.sh
 ```
 
-The installer creates two symlinks:
-1. `~/.claude/skills/dna-extractor/` - skill folder with prompts, templates, SKILL.md
-2. `~/.claude/commands/dna-extractor.md` - enables the `/dna-extractor` command
+The installer creates:
+1. `~/.claude/skills/dna-extractor-skill/` - symlink to skill folder (prompts, templates, SKILL.md)
+2. `~/.claude/commands/dna-extractor.md` - command file with configured paths
 
 ### Requirements
 
@@ -215,20 +215,21 @@ Final agents combine and validate findings:
 
 ```
 dna-extractor/
-├── skills/
-│   └── dna-extractor/         # Main skill folder (symlinked to ~/.claude/skills/)
-│       ├── SKILL.md           # Skill description (required)
-│       ├── command.md         # Slash command (symlinked to ~/.claude/commands/)
-│       ├── prompts/           # Analysis prompts by phase
+├── commands/                    # -> ~/.claude/commands/
+│   └── dna-extractor.md         # Slash command (copied with path substitution)
+├── skills/                      # -> ~/.claude/skills/
+│   └── dna-extractor-skill/     # Skill folder (symlinked)
+│       ├── SKILL.md             # Skill description
+│       ├── prompts/             # Analysis prompts by phase
 │       │   ├── orchestrator.md
-│       │   ├── phase1/        # Scout prompts
-│       │   ├── phase2/        # Specialist prompts
-│       │   └── phase3/        # Synthesis prompts
-│       └── templates/         # Output templates
+│       │   ├── phase1/          # Scout prompts
+│       │   ├── phase2/          # Specialist prompts
+│       │   └── phase3/          # Synthesis prompts
+│       └── templates/           # Output templates
 │           └── dna-template.md
-├── install.sh                 # Installation script
-├── README.md                  # This file
-└── CLAUDE.md                  # Project conventions
+├── install.sh                   # Installation script
+├── README.md                    # This file
+└── CLAUDE.md                    # Project conventions
 ```
 
 ## Troubleshooting
@@ -244,9 +245,12 @@ Or manually install from within the cloned repo:
 ```bash
 mkdir -p ~/.claude/commands ~/.claude/skills
 
-# Symlink skill folder and command
-ln -sf "$(pwd)/skills/dna-extractor" ~/.claude/skills/
-ln -sf "$(pwd)/skills/dna-extractor/command.md" ~/.claude/commands/dna-extractor.md
+# Symlink skill folder
+ln -sf "$(pwd)/skills/dna-extractor-skill" ~/.claude/skills/
+
+# Copy command with path substitution
+sed "s|@SKILL_DIR@|$HOME/.claude/skills/dna-extractor-skill|g" \
+    commands/dna-extractor.md > ~/.claude/commands/dna-extractor.md
 ```
 
 ### Extraction takes too long
