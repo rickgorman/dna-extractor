@@ -5,8 +5,10 @@ Extract the "DNA" of any codebase - conventions, patterns, architecture, and tri
 ## Quick Start
 
 ```bash
-# Install
-curl -fsSL https://raw.githubusercontent.com/rickgorman/dna-extractor/main/install.sh | bash
+# Clone and install
+gh repo clone rickgorman/dna-extractor
+cd dna-extractor
+./install.sh
 
 # Extract DNA from a codebase
 /dna-extractor /path/to/your/repo
@@ -31,29 +33,23 @@ The extracted "DNA" is synthesized into a structured DNA.md document that helps 
 
 ## Installation
 
-### One-Line Install (Recommended)
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/rickgorman/dna-extractor/main/install.sh | bash
-```
-
-This installs the DNA Extractor as a Claude Code skill.
-
-### Manual Installation
-
 ```bash
 # Clone the repository
-git clone https://github.com/rickgorman/dna-extractor.git
+gh repo clone rickgorman/dna-extractor
 cd dna-extractor
 
 # Run the installer
 ./install.sh
 ```
 
+The installer will:
+1. Create symlinks for the `/dna-extractor` command in `~/.claude/commands/`
+2. Create symlinks for the skill prompts in `~/.claude/skills/`
+
 ### Requirements
 
 - Claude Code CLI installed and configured
-- Git (for repository analysis)
+- GitHub CLI (`gh`) for cloning
 
 ## Usage
 
@@ -252,14 +248,24 @@ dna-extractor/
 
 ### "Command not found: /dna-extractor"
 
-The skill isn't installed. Run the installer:
+The command isn't installed. From the cloned repo directory, run:
 ```bash
 ./install.sh
 ```
 
-Or manually copy the skill to your Claude Code skills directory:
+Or manually install from within the cloned repo:
 ```bash
-cp skills/dna-extractor.md ~/.claude/skills/
+mkdir -p ~/.claude/commands ~/.claude/skills/dna-extractor
+
+# Install command with absolute resource paths
+sed -e "s|@prompts/|@$(pwd)/prompts/|g" \
+    -e "s|@templates/|@$(pwd)/templates/|g" \
+    .claude/commands/dna-extractor.md > ~/.claude/commands/dna-extractor.md
+
+# Symlink skill, prompts, and templates
+ln -sf "$(pwd)/skills/dna-extractor.md" ~/.claude/skills/dna-extractor/
+ln -sf "$(pwd)/prompts" ~/.claude/skills/dna-extractor/
+ln -sf "$(pwd)/templates" ~/.claude/skills/dna-extractor/
 ```
 
 ### Extraction takes too long
@@ -300,8 +306,10 @@ For repositories with >100k files:
 
 ### Extraction crashes or hangs
 
-1. Ensure you have the latest version:
+1. Update to the latest version:
    ```bash
+   cd /path/to/dna-extractor
+   git pull
    ./install.sh  # Re-run installer
    ```
 

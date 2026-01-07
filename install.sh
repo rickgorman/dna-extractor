@@ -3,6 +3,8 @@
 # DNA Extractor Installer
 # Interactive installer for the /dna-extractor Claude Code command
 #
+# Usage: Clone the repo, then run ./install.sh from within it
+#
 
 set -euo pipefail
 
@@ -14,24 +16,24 @@ BLUE='\033[0;34m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
-# Detect if running from pipe (curl | bash) or from file
-if [[ -z "${BASH_SOURCE[0]:-}" || "${BASH_SOURCE[0]}" == "bash" ]]; then
-    # Running from pipe - will fetch from GitHub
-    PIPED_MODE=true
-    SCRIPT_DIR=""
-    COMMAND_SOURCE=""
-    REPO_RAW_URL="https://raw.githubusercontent.com/rickgorman/dna-extractor/main"
-else
-    # Running from file
-    PIPED_MODE=false
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    COMMAND_SOURCE="${SCRIPT_DIR}/.claude/commands/dna-extractor.md"
-    REPO_RAW_URL=""
-fi
+# Script location (the cloned repo)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Installation location for personal commands
+# Source files in the repo
+COMMAND_SOURCE="${SCRIPT_DIR}/.claude/commands/dna-extractor.md"
+SKILL_SOURCE="${SCRIPT_DIR}/skills/dna-extractor.md"
+PROMPTS_SOURCE="${SCRIPT_DIR}/prompts"
+TEMPLATES_SOURCE="${SCRIPT_DIR}/templates"
+
+# Installation targets
 COMMANDS_DIR="${HOME}/.claude/commands"
+SKILLS_DIR="${HOME}/.claude/skills"
+SKILL_SUBDIR="${SKILLS_DIR}/dna-extractor"
+
 COMMAND_TARGET="${COMMANDS_DIR}/dna-extractor.md"
+SKILL_TARGET="${SKILL_SUBDIR}/dna-extractor.md"
+PROMPTS_TARGET="${SKILL_SUBDIR}/prompts"
+TEMPLATES_TARGET="${SKILL_SUBDIR}/templates"
 
 #------------------------------------------------------------------------------
 # Output helpers
@@ -61,36 +63,59 @@ prompt() {
 }
 
 #------------------------------------------------------------------------------
-# Detection and validation
+# Validation
+#------------------------------------------------------------------------------
+
+validate_source_files() {
+    local missing=0
+
+    if [[ ! -f "$COMMAND_SOURCE" ]]; then
+        error "Command file not found: $COMMAND_SOURCE"
+        missing=1
+    fi
+
+    if [[ ! -f "$SKILL_SOURCE" ]]; then
+        error "Skill file not found: $SKILL_SOURCE"
+        missing=1
+    fi
+
+    if [[ ! -d "$PROMPTS_SOURCE" ]]; then
+        error "Prompts directory not found: $PROMPTS_SOURCE"
+        missing=1
+    fi
+
+    if [[ ! -d "$TEMPLATES_SOURCE" ]]; then
+        error "Templates directory not found: $TEMPLATES_SOURCE"
+        missing=1
+    fi
+
+    if [[ $missing -eq 1 ]]; then
+        echo ""
+        error "Please run this script from within the cloned dna-extractor repository."
+        exit 1
+    fi
+}
+
+#------------------------------------------------------------------------------
+# Installation status
 #------------------------------------------------------------------------------
 
 check_existing_installation() {
+    local status="none"
+
     if [[ -L "$COMMAND_TARGET" ]]; then
-        # It's a symlink
-        if [[ "$PIPED_MODE" == true ]]; then
-            # In piped mode, any symlink is "different" since we want a file
-            local current_target
-            current_target="$(readlink "$COMMAND_TARGET" 2>/dev/null || echo "")"
-            echo "different:$current_target"
+        local current_target
+        current_target="$(readlink "$COMMAND_TARGET" 2>/dev/null || echo "")"
+        if [[ "$current_target" == "$COMMAND_SOURCE" ]]; then
+            status="up_to_date"
         else
-            local current_target
-            current_target="$(readlink "$COMMAND_TARGET" 2>/dev/null || echo "")"
-            if [[ "$current_target" == "$COMMAND_SOURCE" ]]; then
-                echo "up_to_date"
-            else
-                echo "different:$current_target"
-            fi
+            status="different:$current_target"
         fi
     elif [[ -e "$COMMAND_TARGET" ]]; then
-        if [[ "$PIPED_MODE" == true ]]; then
-            # In piped mode, existing file might be up to date - check later
-            echo "file_exists"
-        else
-            echo "file_exists"
-        fi
-    else
-        echo "none"
+        status="file_exists"
     fi
+
+    echo "$status"
 }
 
 #------------------------------------------------------------------------------
@@ -122,17 +147,14 @@ ask_yes_no() {
 explain_actions() {
     echo "This installer will:"
     echo ""
-    echo "  1. Create the commands directory (if needed):"
-    echo "     ${COMMANDS_DIR}"
+    echo "  1. Install the /dna-extractor command:"
+    echo "     ${COMMAND_TARGET}"
+    echo "     (with resource paths configured to this repo)"
     echo ""
-    if [[ "$PIPED_MODE" == true ]]; then
-        echo "  2. Download the /dna-extractor command from GitHub:"
-        echo "     ${COMMAND_TARGET}"
-    else
-        echo "  2. Create a symlink for the /dna-extractor command:"
-        echo "     ${COMMAND_TARGET}"
-        echo "     -> ${COMMAND_SOURCE}"
-    fi
+    echo "  2. Create symlinks for skill files, prompts, and templates:"
+    echo "     ${SKILL_TARGET}"
+    echo "     ${PROMPTS_TARGET}"
+    echo "     ${TEMPLATES_TARGET}"
     echo ""
     echo "After installation:"
     echo "  - Restart Claude Code (or start a new session)"
@@ -140,68 +162,86 @@ explain_actions() {
     echo ""
 }
 
+create_symlink() {
+    local source="$1"
+    local target="$2"
+    local target_dir
+    target_dir="$(dirname "$target")"
+
+    # Create parent directory if needed
+    if [[ ! -d "$target_dir" ]]; then
+        mkdir -p "$target_dir"
+        info "Created directory: $target_dir"
+    fi
+
+    # Remove existing file/symlink if present
+    if [[ -e "$target" || -L "$target" ]]; then
+        rm -f "$target"
+    fi
+
+    # Create the symlink
+    ln -s "$source" "$target"
+}
+
 perform_installation() {
     # Create commands directory if needed
     if [[ ! -d "$COMMANDS_DIR" ]]; then
-        info "Creating directory: $COMMANDS_DIR"
         mkdir -p "$COMMANDS_DIR"
+        info "Created directory: $COMMANDS_DIR"
     fi
 
-    # Handle existing installation
-    local existing
-    existing="$(check_existing_installation)"
+    # Remove existing command file if present
+    if [[ -e "$COMMAND_TARGET" || -L "$COMMAND_TARGET" ]]; then
+        rm -f "$COMMAND_TARGET"
+    fi
 
-    case "$existing" in
-        "up_to_date")
-            if [[ "$PIPED_MODE" == true ]]; then
-                info "Command file already exists."
-            else
-                info "Symlink already exists and is correct."
-            fi
-            return 0
-            ;;
-        different:*)
-            local old_target="${existing#different:}"
-            warn "Updating symlink (was: $old_target)"
-            rm "$COMMAND_TARGET"
-            ;;
-        "file_exists")
-            if [[ "$PIPED_MODE" == true ]]; then
-                warn "Replacing existing file"
-            else
-                warn "Replacing existing file with symlink"
-            fi
-            rm "$COMMAND_TARGET"
-            ;;
-        "none")
-            # Fresh install, nothing to do
-            ;;
-    esac
-
-    if [[ "$PIPED_MODE" == true ]]; then
-        # Download the command file from GitHub
-        local remote_url="${REPO_RAW_URL}/.claude/commands/dna-extractor.md"
-        info "Downloading from: $remote_url"
-        if curl -fsSL "$remote_url" -o "$COMMAND_TARGET"; then
-            info "Command file downloaded successfully"
-            return 0
-        else
-            error "Failed to download command file"
-            return 1
-        fi
+    # Copy command file and update @prompts/ and @templates/ references to absolute paths
+    # This ensures resources are findable regardless of CWD
+    sed -e "s|@prompts/|@${PROMPTS_SOURCE}/|g" \
+        -e "s|@templates/|@${TEMPLATES_SOURCE}/|g" \
+        "$COMMAND_SOURCE" > "$COMMAND_TARGET"
+    if [[ -f "$COMMAND_TARGET" ]]; then
+        info "Command file installed: $COMMAND_TARGET"
+        info "  (resource paths configured to: ${SCRIPT_DIR})"
     else
-        # Create the symlink
-        ln -s "$COMMAND_SOURCE" "$COMMAND_TARGET"
-
-        # Verify
-        if [[ -L "$COMMAND_TARGET" ]]; then
-            info "Symlink created successfully"
-            return 0
-        else
-            error "Failed to create symlink"
-            return 1
-        fi
+        error "Failed to install command file"
+        return 1
     fi
+
+    # Create skill directory
+    if [[ ! -d "$SKILL_SUBDIR" ]]; then
+        mkdir -p "$SKILL_SUBDIR"
+        info "Created skill directory: $SKILL_SUBDIR"
+    fi
+
+    # Create skill file symlink
+    create_symlink "$SKILL_SOURCE" "$SKILL_TARGET"
+    if [[ -L "$SKILL_TARGET" ]]; then
+        info "Skill symlink created: $SKILL_TARGET"
+    else
+        error "Failed to create skill symlink"
+        return 1
+    fi
+
+    # Create prompts symlink (for reference, though command uses absolute paths)
+    create_symlink "$PROMPTS_SOURCE" "$PROMPTS_TARGET"
+    if [[ -L "$PROMPTS_TARGET" ]]; then
+        info "Prompts symlink created: $PROMPTS_TARGET"
+    else
+        error "Failed to create prompts symlink"
+        return 1
+    fi
+
+    # Create templates symlink
+    create_symlink "$TEMPLATES_SOURCE" "$TEMPLATES_TARGET"
+    if [[ -L "$TEMPLATES_TARGET" ]]; then
+        info "Templates symlink created: $TEMPLATES_TARGET"
+    else
+        error "Failed to create templates symlink"
+        return 1
+    fi
+
+    return 0
 }
 
 #------------------------------------------------------------------------------
@@ -211,12 +251,8 @@ perform_installation() {
 main() {
     print_header
 
-    # Check if source command file exists (only in local mode)
-    if [[ "$PIPED_MODE" == false && ! -f "$COMMAND_SOURCE" ]]; then
-        error "Command file not found: $COMMAND_SOURCE"
-        error "Please ensure .claude/commands/dna-extractor.md exists."
-        exit 1
-    fi
+    # Validate we have all source files
+    validate_source_files
 
     # Check for existing installation
     local existing
@@ -265,6 +301,9 @@ main() {
         echo "  /dna-extractor <repo-path> --level=snapshot  # Quick scan"
         echo "  /dna-extractor --help                   # Show help"
         echo ""
+        echo -e "${YELLOW}Important:${NC} Keep this repo cloned - the symlinks point here!"
+        echo "  Location: ${SCRIPT_DIR}"
+        echo ""
     else
         echo ""
         error "Installation failed."
@@ -272,8 +311,5 @@ main() {
     fi
 }
 
-# Run main unless sourced
-# In piped mode, BASH_SOURCE[0] is empty, so we also check for that
-if [[ -z "${BASH_SOURCE[0]:-}" || "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    main "$@"
-fi
+# Run main
+main "$@"
