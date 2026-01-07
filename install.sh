@@ -28,12 +28,9 @@ TEMPLATES_SOURCE="${SCRIPT_DIR}/templates"
 # Installation targets
 COMMANDS_DIR="${HOME}/.claude/commands"
 SKILLS_DIR="${HOME}/.claude/skills"
-SKILL_SUBDIR="${SKILLS_DIR}/dna-extractor"
 
 COMMAND_TARGET="${COMMANDS_DIR}/dna-extractor.md"
-SKILL_TARGET="${SKILL_SUBDIR}/dna-extractor.md"
-PROMPTS_TARGET="${SKILL_SUBDIR}/prompts"
-TEMPLATES_TARGET="${SKILL_SUBDIR}/templates"
+SKILL_TARGET="${SKILLS_DIR}/dna-extractor.md"
 
 #------------------------------------------------------------------------------
 # Output helpers
@@ -101,21 +98,11 @@ validate_source_files() {
 #------------------------------------------------------------------------------
 
 check_existing_installation() {
-    local status="none"
-
-    if [[ -L "$COMMAND_TARGET" ]]; then
-        local current_target
-        current_target="$(readlink "$COMMAND_TARGET" 2>/dev/null || echo "")"
-        if [[ "$current_target" == "$COMMAND_SOURCE" ]]; then
-            status="up_to_date"
-        else
-            status="different:$current_target"
-        fi
-    elif [[ -e "$COMMAND_TARGET" ]]; then
-        status="file_exists"
+    if [[ -f "$COMMAND_TARGET" ]]; then
+        echo "exists"
+    else
+        echo "none"
     fi
-
-    echo "$status"
 }
 
 #------------------------------------------------------------------------------
@@ -151,10 +138,8 @@ explain_actions() {
     echo "     ${COMMAND_TARGET}"
     echo "     (with resource paths configured to this repo)"
     echo ""
-    echo "  2. Create symlinks for skill files, prompts, and templates:"
-    echo "     ${SKILL_TARGET}"
-    echo "     ${PROMPTS_TARGET}"
-    echo "     ${TEMPLATES_TARGET}"
+    echo "  2. Create skill symlink:"
+    echo "     ${SKILL_TARGET} -> ${SKILL_SOURCE}"
     echo ""
     echo "After installation:"
     echo "  - Restart Claude Code (or start a new session)"
@@ -162,32 +147,17 @@ explain_actions() {
     echo ""
 }
 
-create_symlink() {
-    local source="$1"
-    local target="$2"
-    local target_dir
-    target_dir="$(dirname "$target")"
-
-    # Create parent directory if needed
-    if [[ ! -d "$target_dir" ]]; then
-        mkdir -p "$target_dir"
-        info "Created directory: $target_dir"
-    fi
-
-    # Remove existing file/symlink if present
-    if [[ -e "$target" || -L "$target" ]]; then
-        rm -f "$target"
-    fi
-
-    # Create the symlink
-    ln -s "$source" "$target"
-}
-
 perform_installation() {
     # Create commands directory if needed
     if [[ ! -d "$COMMANDS_DIR" ]]; then
         mkdir -p "$COMMANDS_DIR"
         info "Created directory: $COMMANDS_DIR"
+    fi
+
+    # Create skills directory if needed
+    if [[ ! -d "$SKILLS_DIR" ]]; then
+        mkdir -p "$SKILLS_DIR"
+        info "Created directory: $SKILLS_DIR"
     fi
 
     # Remove existing command file if present
@@ -201,43 +171,23 @@ perform_installation() {
         -e "s|@templates/|@${TEMPLATES_SOURCE}/|g" \
         "$COMMAND_SOURCE" > "$COMMAND_TARGET"
     if [[ -f "$COMMAND_TARGET" ]]; then
-        info "Command file installed: $COMMAND_TARGET"
-        info "  (resource paths configured to: ${SCRIPT_DIR})"
+        info "Command installed: $COMMAND_TARGET"
     else
         error "Failed to install command file"
         return 1
     fi
 
-    # Create skill directory
-    if [[ ! -d "$SKILL_SUBDIR" ]]; then
-        mkdir -p "$SKILL_SUBDIR"
-        info "Created skill directory: $SKILL_SUBDIR"
+    # Remove existing skill symlink if present
+    if [[ -e "$SKILL_TARGET" || -L "$SKILL_TARGET" ]]; then
+        rm -f "$SKILL_TARGET"
     fi
 
-    # Create skill file symlink
-    create_symlink "$SKILL_SOURCE" "$SKILL_TARGET"
+    # Create skill symlink
+    ln -s "$SKILL_SOURCE" "$SKILL_TARGET"
     if [[ -L "$SKILL_TARGET" ]]; then
-        info "Skill symlink created: $SKILL_TARGET"
+        info "Skill symlink: $SKILL_TARGET"
     else
         error "Failed to create skill symlink"
-        return 1
-    fi
-
-    # Create prompts symlink (for reference, though command uses absolute paths)
-    create_symlink "$PROMPTS_SOURCE" "$PROMPTS_TARGET"
-    if [[ -L "$PROMPTS_TARGET" ]]; then
-        info "Prompts symlink created: $PROMPTS_TARGET"
-    else
-        error "Failed to create prompts symlink"
-        return 1
-    fi
-
-    # Create templates symlink
-    create_symlink "$TEMPLATES_SOURCE" "$TEMPLATES_TARGET"
-    if [[ -L "$TEMPLATES_TARGET" ]]; then
-        info "Templates symlink created: $TEMPLATES_TARGET"
-    else
-        error "Failed to create templates symlink"
         return 1
     fi
 
@@ -258,16 +208,13 @@ main() {
     local existing
     existing="$(check_existing_installation)"
 
-    if [[ "$existing" == "up_to_date" ]]; then
-        info "Already installed at: $COMMAND_TARGET"
-        info "The /dna-extractor command is available in Claude Code."
-        echo ""
-        echo "Note: Restart Claude Code if the command doesn't appear."
+    if [[ "$existing" == "exists" ]]; then
+        info "Existing installation found at: $COMMAND_TARGET"
         echo ""
 
-        if ! ask_yes_no "Reinstall anyway?" "n"; then
+        if ! ask_yes_no "Reinstall?" "y"; then
             echo ""
-            echo "Nothing to do. Exiting."
+            echo "Installation cancelled."
             exit 0
         fi
         echo ""
@@ -301,7 +248,7 @@ main() {
         echo "  /dna-extractor <repo-path> --level=snapshot  # Quick scan"
         echo "  /dna-extractor --help                   # Show help"
         echo ""
-        echo -e "${YELLOW}Important:${NC} Keep this repo cloned - the symlinks point here!"
+        echo -e "${YELLOW}Important:${NC} Keep this repo cloned - the command references files here!"
         echo "  Location: ${SCRIPT_DIR}"
         echo ""
     else

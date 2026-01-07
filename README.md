@@ -43,8 +43,8 @@ cd dna-extractor
 ```
 
 The installer will:
-1. Create symlinks for the `/dna-extractor` command in `~/.claude/commands/`
-2. Create symlinks for the skill prompts in `~/.claude/skills/`
+1. Install the `/dna-extractor` command to `~/.claude/commands/`
+2. Create a skill symlink in `~/.claude/skills/`
 
 ### Requirements
 
@@ -255,17 +255,15 @@ The command isn't installed. From the cloned repo directory, run:
 
 Or manually install from within the cloned repo:
 ```bash
-mkdir -p ~/.claude/commands ~/.claude/skills/dna-extractor
+mkdir -p ~/.claude/commands ~/.claude/skills
 
 # Install command with absolute resource paths
 sed -e "s|@prompts/|@$(pwd)/prompts/|g" \
     -e "s|@templates/|@$(pwd)/templates/|g" \
     .claude/commands/dna-extractor.md > ~/.claude/commands/dna-extractor.md
 
-# Symlink skill, prompts, and templates
-ln -sf "$(pwd)/skills/dna-extractor.md" ~/.claude/skills/dna-extractor/
-ln -sf "$(pwd)/prompts" ~/.claude/skills/dna-extractor/
-ln -sf "$(pwd)/templates" ~/.claude/skills/dna-extractor/
+# Symlink skill
+ln -sf "$(pwd)/skills/dna-extractor.md" ~/.claude/skills/
 ```
 
 ### Extraction takes too long
