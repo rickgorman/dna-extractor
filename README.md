@@ -325,21 +325,13 @@ For repositories with >100k files:
 
 ## Contributing
 
-See [CLAUDE.md](./CLAUDE.md) for coding conventions and contribution guidelines.
-
 ### Adding Support for New Frameworks
 
 1. Identify the framework's characteristic files and patterns
 2. Add detection logic to the relevant scout (usually `structure-scout.md`)
 3. Add specialized extraction in the appropriate specialist prompt
 4. Test against a real project using that framework
-5. Update the multi-repo test suite
 
 ## License
 
 MIT
-
-## Related Projects
-
-- [Beads](https://github.com/steveyegge/beads) - Issue tracking system
-- [Claude Code](https://claude.com/claude-code) - AI coding assistant
