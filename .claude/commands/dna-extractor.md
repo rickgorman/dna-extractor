@@ -257,12 +257,77 @@ If `--help` was passed, show help and stop.
 
 Otherwise:
 
+### Step 0: Fast Intro (IMMEDIATE - no delay)
+
+**Display intro within 1 second of start:**
+
+1. **Get project name (fast check only):**
+   ```bash
+   # Try README H1 first (grep first # heading)
+   head -20 README.md 2>/dev/null | grep -m1 '^# ' | sed 's/^# //'
+
+   # Fallback: use folder/repo name
+   basename "$(pwd)" | sed 's/\.git$//'
+   ```
+
+2. **Display intro immediately:**
+   ```
+   DNA Extractor
+   =============
+   Scanning: {project_name}
+
+   Phases:
+     1. Scout     - structure, config, entry points, schemas
+     2. Analyze   - domain, APIs, tests, security, conventions
+     3. Synthesize - resolve conflicts, score confidence, render
+
+   Starting Phase 1...
+   ```
+
+3. **NO prompts, NO delays** - print intro and immediately begin Phase 1
+
+**Example for local path:**
+```
+$ /dna-extractor /path/to/myproject --level=standard
+
+DNA Extractor
+=============
+Scanning: myproject
+
+Phases:
+  1. Scout     - structure, config, entry points, schemas
+  2. Analyze   - domain, APIs, tests, security, conventions
+  3. Synthesize - resolve conflicts, score confidence, render
+
+Starting Phase 1...
+```
+
+**Example for GitHub URL:**
+```
+$ /dna-extractor https://github.com/foo/bar.git
+
+DNA Extractor
+=============
+Cloning: bar (from github.com/foo)
+
+Phases:
+  1. Scout     - structure, config, entry points, schemas
+  2. Analyze   - domain, APIs, tests, security, conventions
+  3. Synthesize - resolve conflicts, score confidence, render
+
+Cloning repository...
+Starting Phase 1...
+```
+
+### Steps 1-9: Main Extraction
+
 1. Parse arguments from: $ARGUMENTS
-2. Determine output filename (see Output File Naming above)
-3. Launch Phase 1 scouts (4 parallel background tasks)
-4. Collect Phase 1 results
-5. Launch Phase 2 specialists (up to 6 parallel background tasks based on findings)
-6. Collect Phase 2 results
-7. Run Phase 3 synthesis in main context
-8. Write DNA to output file (never clobber existing)
-9. Display full path to created file
+2. **Display fast intro (Step 0 above)**
+3. Determine output filename (see Output File Naming above)
+4. Launch Phase 1 scouts (4 parallel background tasks)
+5. Collect Phase 1 results
+6. Launch Phase 2 specialists (up to 6 parallel background tasks based on findings)
+7. Collect Phase 2 results
+8. Run Phase 3 synthesis in main context
+9. Write DNA to output file (never clobber existing)
+10. Display full path to created file
