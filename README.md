@@ -269,7 +269,7 @@ For large codebases, use a lower extraction level:
 /dna-extractor /path/to/repo --level=skeleton
 ```
 
-The `skeleton` level provides useful output in ~10 minutes vs ~30 minutes for `standard`.
+The `skeleton` level provides useful output in ~3-10 minutes vs ~10-15 minutes for `standard`.
 
 ### Low confidence scores
 
