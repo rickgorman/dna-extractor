@@ -128,6 +128,40 @@ Only after Phase 2 completes, run synthesis in main context:
 3. **DNA Rendering**: Generate final output using template
    - Reference: @SKILL_DIR@/templates/dna-template.md
 
+After writing the DNA file, notify the user:
+```
+Phase 3 complete. Initial DNA written to: {filename}
+
+You can review it now while Phase 4 refines it...
+
+Starting Phase 4 (refinement)...
+```
+
+---
+
+## Phase 4: Refinement (5 PASSES)
+
+After the initial DNA file is written, perform 5 refinement passes:
+
+**Each pass:**
+1. **Read** the current DNA markdown file
+2. **Identify gaps**: Look for questions/uncertainties listed in the file itself, plus notes about things that are probably missing
+3. **Coverage check**: Ultrathink about whether 90%+ of human or agent use cases for this codebase are documented
+4. **Prune noise**: Consider whether any DNA sequences are useless (deep version numbers, npm dependency chains, low-level details not consequential to the project)
+5. **Architectural fit**: Consider whether the existing repo could be rebuilt to suit the dominant user stories, or if there are missing user stories or primary systems that aren't documented
+
+**After 5 passes**, use your refined understanding to generate a second file:
+- Filename: `{PROJECT}_DNA_REFINED.md`
+- This should be a higher-quality, more actionable version of the original
+
+**Final output:**
+```
+Phase 4 complete. Refined DNA written to: {refined_filename}
+
+Summary of refinements:
+- [list key improvements/additions/removals]
+```
+
 ---
 
 ## Parallelization Rules
@@ -289,6 +323,7 @@ Otherwise:
      1. Scout     - structure, config, entry points, schemas
      2. Analyze   - domain, APIs, tests, security, conventions
      3. Synthesize - resolve conflicts, score confidence, render
+     4. Refine    - 5 passes to improve coverage and prune noise
 
    Starting Phase 1...
    ```
@@ -307,6 +342,7 @@ Phases:
   1. Scout     - structure, config, entry points, schemas
   2. Analyze   - domain, APIs, tests, security, conventions
   3. Synthesize - resolve conflicts, score confidence, render
+  4. Refine    - 5 passes to improve coverage and prune noise
 
 Starting Phase 1...
 ```
@@ -323,12 +359,13 @@ Phases:
   1. Scout     - structure, config, entry points, schemas
   2. Analyze   - domain, APIs, tests, security, conventions
   3. Synthesize - resolve conflicts, score confidence, render
+  4. Refine    - 5 passes to improve coverage and prune noise
 
 Cloning repository...
 Starting Phase 1...
 ```
 
-### Steps 1-9: Main Extraction
+### Steps 1-13: Main Extraction
 
 1. Parse arguments from: $ARGUMENTS
 2. **Display fast intro (Step 0 above)**
@@ -338,5 +375,8 @@ Starting Phase 1...
 6. Launch Phase 2 specialists (up to 6 parallel background tasks based on findings)
 7. Collect Phase 2 results
 8. Run Phase 3 synthesis in main context
-9. Write DNA to output file (never clobber existing)
-10. Display full path to created file
+9. Write initial DNA to output file (never clobber existing)
+10. **Notify user**: "Initial DNA ready at {path}. You can review it now. Starting Phase 4..."
+11. Run Phase 4 refinement (5 passes)
+12. Write refined DNA to `{PROJECT}_DNA_REFINED.md`
+13. Display summary of refinements and paths to both files

@@ -187,7 +187,7 @@ Web application (Django)
 
 ## How It Works
 
-DNA Extractor uses a three-phase approach:
+DNA Extractor uses a four-phase approach:
 
 ### Phase 1: Reconnaissance (Scouts)
 
@@ -210,10 +210,22 @@ Domain experts analyze specific aspects:
 
 ### Phase 3: Synthesis
 
-Final agents combine and validate findings:
+Combine and validate findings:
 - **Conflict Resolver**: Reconcile contradictory information
 - **Confidence Scorer**: Assign confidence levels to sections
-- **DNA Renderer**: Generate final DNA.md document
+- **DNA Renderer**: Generate initial DNA.md document
+
+*You can review the initial DNA file while Phase 4 runs.*
+
+### Phase 4: Refinement
+
+Five passes to improve the DNA:
+- **Gap identification**: Find questions/uncertainties in the DNA itself
+- **Coverage check**: Ensure 90%+ of use cases are documented
+- **Noise pruning**: Remove low-value details (deep versions, dependency chains)
+- **Architectural fit**: Validate against dominant user stories
+
+Outputs a refined `*_DNA_REFINED.md` with improvements summarized.
 
 ## Project Structure
 
