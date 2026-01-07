@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # DNA Extractor Installer
-# Interactive installer for the /dna-extractor Claude Code command
+# Interactive installer for the /dna-extractor Claude Code skill
 #
 # Usage: Clone the repo, then run ./install.sh from within it
 #
@@ -19,18 +19,16 @@ NC='\033[0m' # No Color
 # Script location (the cloned repo)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Source files in the repo
-COMMAND_SOURCE="${SCRIPT_DIR}/.claude/commands/dna-extractor.md"
-SKILL_SOURCE="${SCRIPT_DIR}/skills/dna-extractor.md"
-PROMPTS_SOURCE="${SCRIPT_DIR}/prompts"
-TEMPLATES_SOURCE="${SCRIPT_DIR}/templates"
+# Source: the skill folder containing everything
+SKILL_FOLDER="${SCRIPT_DIR}/skills/dna-extractor"
+COMMAND_SOURCE="${SKILL_FOLDER}/command.md"
 
 # Installation targets
 COMMANDS_DIR="${HOME}/.claude/commands"
 SKILLS_DIR="${HOME}/.claude/skills"
 
+SKILL_TARGET="${SKILLS_DIR}/dna-extractor"
 COMMAND_TARGET="${COMMANDS_DIR}/dna-extractor.md"
-SKILL_TARGET="${SKILLS_DIR}/dna-extractor.md"
 
 #------------------------------------------------------------------------------
 # Output helpers
@@ -45,10 +43,6 @@ print_header() {
 
 info() {
     echo -e "${GREEN}[OK]${NC} $1"
-}
-
-warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
 }
 
 error() {
@@ -66,23 +60,18 @@ prompt() {
 validate_source_files() {
     local missing=0
 
+    if [[ ! -d "$SKILL_FOLDER" ]]; then
+        error "Skill folder not found: $SKILL_FOLDER"
+        missing=1
+    fi
+
     if [[ ! -f "$COMMAND_SOURCE" ]]; then
         error "Command file not found: $COMMAND_SOURCE"
         missing=1
     fi
 
-    if [[ ! -f "$SKILL_SOURCE" ]]; then
-        error "Skill file not found: $SKILL_SOURCE"
-        missing=1
-    fi
-
-    if [[ ! -d "$PROMPTS_SOURCE" ]]; then
-        error "Prompts directory not found: $PROMPTS_SOURCE"
-        missing=1
-    fi
-
-    if [[ ! -d "$TEMPLATES_SOURCE" ]]; then
-        error "Templates directory not found: $TEMPLATES_SOURCE"
+    if [[ ! -f "${SKILL_FOLDER}/SKILL.md" ]]; then
+        error "SKILL.md not found in: $SKILL_FOLDER"
         missing=1
     fi
 
@@ -90,18 +79,6 @@ validate_source_files() {
         echo ""
         error "Please run this script from within the cloned dna-extractor repository."
         exit 1
-    fi
-}
-
-#------------------------------------------------------------------------------
-# Installation status
-#------------------------------------------------------------------------------
-
-check_existing_installation() {
-    if [[ -f "$COMMAND_TARGET" ]]; then
-        echo "exists"
-    else
-        echo "none"
     fi
 }
 
@@ -128,18 +105,17 @@ ask_yes_no() {
 }
 
 #------------------------------------------------------------------------------
-# Installation actions
+# Installation
 #------------------------------------------------------------------------------
 
 explain_actions() {
-    echo "This installer will:"
+    echo "This installer will create two symlinks:"
     echo ""
-    echo "  1. Install the /dna-extractor command:"
-    echo "     ${COMMAND_TARGET}"
-    echo "     (with resource paths configured to this repo)"
+    echo "  1. Skill folder (includes prompts, templates, SKILL.md):"
+    echo "     ${SKILL_TARGET} -> ${SKILL_FOLDER}"
     echo ""
-    echo "  2. Create skill symlink:"
-    echo "     ${SKILL_TARGET} -> ${SKILL_SOURCE}"
+    echo "  2. Command (enables /dna-extractor):"
+    echo "     ${COMMAND_TARGET} -> ${COMMAND_SOURCE}"
     echo ""
     echo "After installation:"
     echo "  - Restart Claude Code (or start a new session)"
@@ -148,46 +124,34 @@ explain_actions() {
 }
 
 perform_installation() {
-    # Create commands directory if needed
-    if [[ ! -d "$COMMANDS_DIR" ]]; then
-        mkdir -p "$COMMANDS_DIR"
-        info "Created directory: $COMMANDS_DIR"
+    # Create directories if needed
+    mkdir -p "$COMMANDS_DIR" "$SKILLS_DIR"
+
+    # Remove existing skill symlink/folder if present
+    if [[ -e "$SKILL_TARGET" || -L "$SKILL_TARGET" ]]; then
+        rm -rf "$SKILL_TARGET"
     fi
 
-    # Create skills directory if needed
-    if [[ ! -d "$SKILLS_DIR" ]]; then
-        mkdir -p "$SKILLS_DIR"
-        info "Created directory: $SKILLS_DIR"
+    # Create skill folder symlink
+    ln -s "$SKILL_FOLDER" "$SKILL_TARGET"
+    if [[ -L "$SKILL_TARGET" ]]; then
+        info "Skill folder: $SKILL_TARGET"
+    else
+        error "Failed to create skill symlink"
+        return 1
     fi
 
-    # Remove existing command file if present
+    # Remove existing command symlink if present
     if [[ -e "$COMMAND_TARGET" || -L "$COMMAND_TARGET" ]]; then
         rm -f "$COMMAND_TARGET"
     fi
 
-    # Copy command file and update @prompts/ and @templates/ references to absolute paths
-    # This ensures resources are findable regardless of CWD
-    sed -e "s|@prompts/|@${PROMPTS_SOURCE}/|g" \
-        -e "s|@templates/|@${TEMPLATES_SOURCE}/|g" \
-        "$COMMAND_SOURCE" > "$COMMAND_TARGET"
-    if [[ -f "$COMMAND_TARGET" ]]; then
-        info "Command installed: $COMMAND_TARGET"
+    # Create command symlink
+    ln -s "$COMMAND_SOURCE" "$COMMAND_TARGET"
+    if [[ -L "$COMMAND_TARGET" ]]; then
+        info "Command: $COMMAND_TARGET"
     else
-        error "Failed to install command file"
-        return 1
-    fi
-
-    # Remove existing skill symlink if present
-    if [[ -e "$SKILL_TARGET" || -L "$SKILL_TARGET" ]]; then
-        rm -f "$SKILL_TARGET"
-    fi
-
-    # Create skill symlink
-    ln -s "$SKILL_SOURCE" "$SKILL_TARGET"
-    if [[ -L "$SKILL_TARGET" ]]; then
-        info "Skill symlink: $SKILL_TARGET"
-    else
-        error "Failed to create skill symlink"
+        error "Failed to create command symlink"
         return 1
     fi
 
@@ -200,18 +164,12 @@ perform_installation() {
 
 main() {
     print_header
-
-    # Validate we have all source files
     validate_source_files
 
     # Check for existing installation
-    local existing
-    existing="$(check_existing_installation)"
-
-    if [[ "$existing" == "exists" ]]; then
-        info "Existing installation found at: $COMMAND_TARGET"
+    if [[ -e "$SKILL_TARGET" || -e "$COMMAND_TARGET" ]]; then
+        info "Existing installation found"
         echo ""
-
         if ! ask_yes_no "Reinstall?" "y"; then
             echo ""
             echo "Installation cancelled."
@@ -220,10 +178,8 @@ main() {
         echo ""
     fi
 
-    # Explain what we'll do
     explain_actions
 
-    # Final confirmation
     if ! ask_yes_no "Proceed with installation?"; then
         echo ""
         echo "Installation cancelled."
@@ -234,7 +190,6 @@ main() {
     echo "Installing..."
     echo ""
 
-    # Perform the installation
     if perform_installation; then
         echo ""
         echo -e "${GREEN}${BOLD}Installation complete!${NC}"
@@ -244,11 +199,11 @@ main() {
         echo "  2. Run: /dna-extractor /path/to/repo"
         echo ""
         echo "Usage:"
-        echo "  /dna-extractor <repo-path>              # Full extraction"
+        echo "  /dna-extractor <repo-path>                   # Full extraction"
         echo "  /dna-extractor <repo-path> --level=snapshot  # Quick scan"
-        echo "  /dna-extractor --help                   # Show help"
+        echo "  /dna-extractor --help                        # Show help"
         echo ""
-        echo -e "${YELLOW}Important:${NC} Keep this repo cloned - the command references files here!"
+        echo -e "${YELLOW}Important:${NC} Keep this repo - symlinks point here!"
         echo "  Location: ${SCRIPT_DIR}"
         echo ""
     else
@@ -258,5 +213,4 @@ main() {
     fi
 }
 
-# Run main
 main "$@"
