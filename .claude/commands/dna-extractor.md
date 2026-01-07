@@ -102,6 +102,14 @@ Task 10: Infrastructure Analyst (if IaC detected)
 - Analyze Terraform/CloudFormation
 - Identify CI/CD patterns
 - Reference: @prompts/phase2/infrastructure-analyst.md
+
+Task 11: User Story Extractor (ALWAYS run)
+- Mine README for user intent and personas
+- Extract stories from test names (test_user_can_*)
+- Parse CLI --help for use cases
+- Scan docs/ for user guides
+- Output 2-4 primary user stories + feature inventory
+- Reference: @prompts/phase2/user-story-extractor.md
 ```
 
 **Spawn ALL applicable specialists in a SINGLE message.**
