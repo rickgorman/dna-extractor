@@ -18,7 +18,7 @@ cd dna-extractor
 /dna-extractor <path-to-project|url-to-repo>
 ```
 
-Output: `PROJECT_DNA.md` in current working directory
+Output: `PROJECT_DNA.md` + `PROJECT_DNA_REFINED.md` in current working directory
 
 ## What is DNA Extraction?
 
@@ -33,7 +33,7 @@ DNA Extractor analyzes source code repositories to identify:
 - **Constraints**: Security considerations, performance requirements
 - **Operations**: Build, test, deploy procedures
 
-The extracted "DNA" is synthesized into a structured DNA.md document that helps AI coding assistants understand your codebase quickly.
+The extracted "DNA" is synthesized into structured documentation that helps AI coding assistants understand codebases quickly.
 
 ## Installation
 
@@ -59,15 +59,13 @@ The installer creates:
 
 ### Basic Usage
 
-```bash
-# Extract DNA from current directory
-/dna-extractor .
-
-# Extract DNA from a specific path
-/dna-extractor /path/to/repo
-
-# Output is written to PROJECT_DNA.md in current working directory
 ```
+/dna-extractor .                  # current directory
+/dna-extractor /path/to/repo      # local path
+/dna-extractor https://github.com/user/repo   # GitHub URL
+```
+
+Output: `PROJECT_DNA.md` + `PROJECT_DNA_REFINED.md` in cwd
 
 ### Extraction Levels
 
@@ -240,7 +238,8 @@ dna-extractor/
 │       │   ├── orchestrator.md
 │       │   ├── phase1/          # Scout prompts
 │       │   ├── phase2/          # Specialist prompts
-│       │   └── phase3/          # Synthesis prompts
+│       │   ├── phase3/          # Synthesis prompts
+│       │   └── phase4/          # Refinement prompts
 │       └── templates/           # Output templates
 │           └── dna-template.md
 ├── install.sh                   # Installation script
