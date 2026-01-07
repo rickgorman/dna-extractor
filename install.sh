@@ -120,42 +120,19 @@ ask_yes_no() {
     [[ "$response" == "y" || "$response" == "yes" ]]
 }
 
-ask_location_override() {
-    local current="$1"
-
+show_install_plan() {
+    echo "Installation plan:"
     echo ""
-    prompt "Install location: $current"
-    prompt "Press Enter to accept, or type a different path: "
-
-    local response
-    read -r response
-
-    if [[ -n "$response" ]]; then
-        # Expand ~ to $HOME
-        response="${response/#\~/$HOME}"
-        echo "$response"
-    else
-        echo "$current"
-    fi
+    echo "  Directory: ${SKILLS_DIR}"
+    echo "  Symlink:   dna-extractor.md -> ${SKILL_SOURCE}"
+    echo ""
+    echo -e "After installation, use ${BOLD}/dna-extractor${NC} in Claude Code."
+    echo ""
 }
 
 #------------------------------------------------------------------------------
 # Installation actions
 #------------------------------------------------------------------------------
-
-explain_actions() {
-    echo "This installer will:"
-    echo ""
-    echo "  1. Create the skills directory (if needed):"
-    echo "     ${SKILLS_DIR}"
-    echo ""
-    echo "  2. Create a symlink:"
-    echo "     ${SKILL_TARGET}"
-    echo "     -> ${SKILL_SOURCE}"
-    echo ""
-    echo "After installation, use ${BOLD}/dna-extractor${NC} in Claude Code."
-    echo ""
-}
 
 perform_installation() {
     # Create skills directory if needed
@@ -222,37 +199,40 @@ main() {
     local existing
     existing="$(check_existing_installation)"
 
-    if [[ "$existing" == "up_to_date" ]]; then
-        info "Already installed at: $SKILL_TARGET"
-        info "The /dna-extractor command is available in Claude."
-        echo ""
-
-        if ! ask_yes_no "Reinstall anyway?" "n"; then
+    case "$existing" in
+        "up_to_date")
+            info "Already installed and up-to-date."
+            info "Location: $SKILL_TARGET"
             echo ""
-            echo "Nothing to do. Exiting."
+            echo -e "The ${BOLD}/dna-extractor${NC} command is available in Claude Code."
+            echo ""
             exit 0
-        fi
-        echo ""
-    fi
+            ;;
+        different:*)
+            local old_target="${existing#different:}"
+            warn "Existing symlink points to different location:"
+            echo "     Current: $old_target"
+            echo "     New:     $SKILL_SOURCE"
+            echo ""
+            ;;
+        "file_exists")
+            warn "File exists at install location (will be replaced):"
+            echo "     $SKILL_TARGET"
+            echo ""
+            ;;
+        "none")
+            # Fresh install - show plan
+            show_install_plan
+            ;;
+    esac
 
-    # Explain what we'll do
-    explain_actions
-
-    # Ask for location confirmation/override
-    SKILLS_DIR="$(ask_location_override "$SKILLS_DIR")"
-    SKILL_TARGET="${SKILLS_DIR}/dna-extractor.md"
-
-    echo ""
-
-    # Final confirmation
-    if ! ask_yes_no "Proceed with installation?"; then
+    # Single confirmation
+    if ! ask_yes_no "Install dna-extractor skill?"; then
         echo ""
         echo "Installation cancelled."
         exit 0
     fi
 
-    echo ""
-    echo "Installing..."
     echo ""
 
     # Perform the installation
@@ -260,7 +240,7 @@ main() {
         echo ""
         echo -e "${GREEN}${BOLD}Installation complete!${NC}"
         echo ""
-        echo "Usage: /dna-extractor [options] <repository>"
+        echo "Usage: /dna-extractor [path-or-url] [options]"
         echo "Help:  /dna-extractor --help"
         echo ""
     else
