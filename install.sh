@@ -19,15 +19,15 @@ NC='\033[0m' # No Color
 # Script location (the cloned repo)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Source: the skill folder containing everything
-SKILL_FOLDER="${SCRIPT_DIR}/skills/dna-extractor"
-COMMAND_SOURCE="${SKILL_FOLDER}/command.md"
+# Source: skill folder and command file (mirroring ~/.claude/ layout)
+SKILL_FOLDER="${SCRIPT_DIR}/skills/dna-extractor-skill"
+COMMAND_SOURCE="${SCRIPT_DIR}/commands/dna-extractor.md"
 
 # Installation targets
 COMMANDS_DIR="${HOME}/.claude/commands"
 SKILLS_DIR="${HOME}/.claude/skills"
 
-SKILL_TARGET="${SKILLS_DIR}/dna-extractor"
+SKILL_TARGET="${SKILLS_DIR}/dna-extractor-skill"
 COMMAND_TARGET="${COMMANDS_DIR}/dna-extractor.md"
 
 #------------------------------------------------------------------------------
@@ -75,6 +75,11 @@ validate_source_files() {
         missing=1
     fi
 
+    if [[ ! -d "${SCRIPT_DIR}/commands" ]]; then
+        error "Commands directory not found: ${SCRIPT_DIR}/commands"
+        missing=1
+    fi
+
     if [[ $missing -eq 1 ]]; then
         echo ""
         error "Please run this script from within the cloned dna-extractor repository."
@@ -111,11 +116,11 @@ ask_yes_no() {
 explain_actions() {
     echo "This installer will create two symlinks:"
     echo ""
-    echo "  1. Skill folder (includes prompts, templates, SKILL.md):"
-    echo "     ${SKILL_TARGET} -> ${SKILL_FOLDER}"
-    echo ""
-    echo "  2. Command (enables /dna-extractor):"
+    echo "  1. Command (enables /dna-extractor):"
     echo "     ${COMMAND_TARGET} -> ${COMMAND_SOURCE}"
+    echo ""
+    echo "  2. Skill folder (prompts, templates, SKILL.md):"
+    echo "     ${SKILL_TARGET} -> ${SKILL_FOLDER}"
     echo ""
     echo "After installation:"
     echo "  - Restart Claude Code (or start a new session)"

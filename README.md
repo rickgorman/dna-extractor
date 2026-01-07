@@ -43,8 +43,8 @@ cd dna-extractor
 ```
 
 The installer creates two symlinks:
-1. `~/.claude/skills/dna-extractor/` - skill folder with prompts, templates, SKILL.md
-2. `~/.claude/commands/dna-extractor.md` - enables the `/dna-extractor` command
+1. `~/.claude/commands/dna-extractor.md` - enables the `/dna-extractor` command
+2. `~/.claude/skills/dna-extractor-skill/` - skill folder with prompts, templates, SKILL.md
 
 ### Requirements
 
@@ -215,10 +215,11 @@ Final agents combine and validate findings:
 
 ```
 dna-extractor/
+├── commands/
+│   └── dna-extractor.md       # Slash command (symlinked to ~/.claude/commands/)
 ├── skills/
-│   └── dna-extractor/         # Main skill folder (symlinked to ~/.claude/skills/)
+│   └── dna-extractor-skill/   # Skill folder (symlinked to ~/.claude/skills/)
 │       ├── SKILL.md           # Skill description (required)
-│       ├── command.md         # Slash command (symlinked to ~/.claude/commands/)
 │       ├── prompts/           # Analysis prompts by phase
 │       │   ├── orchestrator.md
 │       │   ├── phase1/        # Scout prompts
@@ -244,9 +245,9 @@ Or manually install from within the cloned repo:
 ```bash
 mkdir -p ~/.claude/commands ~/.claude/skills
 
-# Symlink skill folder and command
-ln -sf "$(pwd)/skills/dna-extractor" ~/.claude/skills/
-ln -sf "$(pwd)/skills/dna-extractor/command.md" ~/.claude/commands/dna-extractor.md
+# Symlink command and skill folder
+ln -sf "$(pwd)/commands/dna-extractor.md" ~/.claude/commands/dna-extractor.md
+ln -sf "$(pwd)/skills/dna-extractor-skill" ~/.claude/skills/dna-extractor-skill
 ```
 
 ### Extraction takes too long
