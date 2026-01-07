@@ -6,26 +6,15 @@
 
 ---
 
-## Metadata
-
-| Field | Value |
-|-------|-------|
-| Repository | {{repository_url}} |
-| Branch | {{branch}} |
-| Commit | {{commit_sha}} |
-| Extracted | {{extraction_timestamp}} |
-| Overall Confidence | {{overall_confidence}}% |
-| Extraction Level | {{extraction_level}} |
-| Extractor Version | {{extractor_version}} |
-
----
-
 ## Identity
 
 **What is this project?**
 
 ### Name
 {{project_name}}
+
+### One-Liner
+{{one_liner}}
 
 ### Description
 {{project_description}}
@@ -40,66 +29,19 @@
 {{project_type}}
 <!-- e.g., library, web-app, cli-tool, api-service, monorepo -->
 
-### License
-{{license}}
-
-### Maintainers
-{{maintainers}}
-
 ---
 
-## Domain Model
+## Primary User Stories
 
-**Core business entities and their relationships.**
+**Who uses this and why?**
 
-### Entities
-
-{{#each entities}}
-#### {{name}}
-
-| Attribute | Type | Constraints |
-|-----------|------|-------------|
-{{#each attributes}}
-| {{name}} | {{type}} | {{constraints}} |
+{{#each user_stories}}
+- **As a** {{actor}}, **I want** {{goal}}, **so that** {{benefit}}.
 {{/each}}
 
-{{/each}}
-
-<!-- If no entities detected -->
-{{#if no_entities}}
-*No domain entities detected. This may be a utility library or infrastructure project.*
+{{#if no_user_stories}}
+*User stories not detected. See Feature List for capabilities.*
 {{/if}}
-
-### Relationships
-
-{{#each relationships}}
-- **{{from}}** {{cardinality}} **{{to}}** {{#if via}}(via {{via}}){{/if}}
-{{/each}}
-
-### State Machines
-
-{{#each state_machines}}
-#### {{entity}}.{{field}}
-
-States: {{states}}
-
-Transitions:
-{{#each transitions}}
-- {{from}} -> {{to}} {{#if trigger}}on {{trigger}}{{/if}}
-{{/each}}
-
-{{/each}}
-
-### Invariants
-
-{{#each invariants}}
-- {{description}} `[{{entity}}]`
-{{/each}}
-
-### Domain Confidence
-- Entity extraction: {{entity_confidence}}%
-- Relationship mapping: {{relationship_confidence}}%
-- State machine detection: {{state_machine_confidence}}%
 
 ---
 
@@ -115,18 +57,17 @@ Transitions:
 
 ### API Endpoints
 
+{{#if endpoints}}
+| Method | Path | Description |
+|--------|------|-------------|
 {{#each endpoints}}
-#### {{method}} {{path}}
-
-{{description}}
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-{{#each params}}
-| {{name}} | {{type}} | {{required}} | {{description}} |
+| {{method}} | `{{path}}` | {{description}} |
 {{/each}}
+{{/if}}
 
-{{/each}}
+{{#if no_endpoints}}
+*No API endpoints detected.*
+{{/if}}
 
 ### CLI Commands
 
@@ -134,68 +75,15 @@ Transitions:
 - `{{name}}` - {{description}}
 {{/each}}
 
+{{#if no_commands}}
+*No CLI commands detected.*
+{{/if}}
+
 ### Events/Hooks
 
 {{#each events}}
 - **{{name}}**: {{description}}
 {{/each}}
-
-### Capabilities Confidence
-- Feature detection: {{feature_confidence}}%
-- API coverage: {{api_confidence}}%
-
----
-
-## Architecture
-
-**How is this system structured?**
-
-### Directory Structure
-
-```
-{{directory_tree}}
-```
-
-### Key Paths
-
-| Path | Purpose |
-|------|---------|
-{{#each key_paths}}
-| {{path}} | {{purpose}} |
-{{/each}}
-
-### Entry Points
-
-{{#each entry_points}}
-- **{{file}}**: {{purpose}}
-{{/each}}
-
-### Layers
-
-{{#each layers}}
-#### {{name}}
-{{description}}
-
-Key files:
-{{#each files}}
-- {{.}}
-{{/each}}
-
-{{/each}}
-
-### Data Flow
-
-{{data_flow_description}}
-
-### Architecture Patterns
-
-{{#each patterns}}
-- **{{name}}**: {{description}}
-{{/each}}
-
-### Architecture Confidence
-- Structure mapping: {{structure_confidence}}%
-- Pattern detection: {{pattern_confidence}}%
 
 ---
 
@@ -225,11 +113,9 @@ Key files:
 - **{{name}}** ({{type}}): {{purpose}}
 {{/each}}
 
-### External Services
-
-{{#each services}}
-- **{{name}}**: {{description}}
-{{/each}}
+{{#if no_databases}}
+*No database detected.*
+{{/if}}
 
 ### Key Dependencies
 
@@ -239,107 +125,16 @@ Key files:
 | {{name}} | {{version}} | {{purpose}} |
 {{/each}}
 
-### Stack Confidence
-- Language detection: {{language_confidence}}%
-- Framework detection: {{framework_confidence}}%
-- Dependency analysis: {{dependency_confidence}}%
-
----
-
-## Conventions
-
-**Coding standards and patterns.**
-
-### Naming Conventions
-
-| Element | Pattern | Example |
-|---------|---------|---------|
-{{#each naming}}
-| {{element}} | {{pattern}} | {{example}} |
-{{/each}}
-
-### File Organization
-
-{{file_organization}}
-
-### Code Style
-
-{{#each style_rules}}
-- {{.}}
-{{/each}}
-
-### Documentation Patterns
-
-{{#each doc_patterns}}
-- **{{type}}**: {{pattern}}
-{{/each}}
-
-### Testing Patterns
-
-| Type | Location | Pattern |
-|------|----------|---------|
-{{#each test_patterns}}
-| {{type}} | {{location}} | {{pattern}} |
-{{/each}}
-
-### Conventions Confidence
-- Naming patterns: {{naming_confidence}}%
-- Style detection: {{style_confidence}}%
-
----
-
-## Constraints
-
-**Limitations, requirements, and security considerations.**
-
-### Security
-
-{{#each security}}
-- **{{category}}**: {{description}}
-{{/each}}
-
-### Performance
-
-{{#each performance}}
-- {{description}}
-{{/each}}
-
-### Compatibility
-
-| Requirement | Value |
-|-------------|-------|
-{{#each compatibility}}
-| {{name}} | {{value}} |
-{{/each}}
-
-### Environment Variables
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-{{#each env_vars}}
-| {{name}} | {{required}} | {{description}} |
-{{/each}}
-
-### Known Limitations
-
-{{#each limitations}}
-- {{.}}
-{{/each}}
-
-### Constraints Confidence
-- Security analysis: {{security_confidence}}%
-- Environment detection: {{env_confidence}}%
-
 ---
 
 ## Operations
 
-**How to run, deploy, and maintain.**
+**How to run, build, deploy.**
 
-### Local Development
+### Quick Start
 
 ```bash
-{{dev_setup}}
+{{quick_start}}
 ```
 
 ### Build
@@ -354,13 +149,19 @@ Key files:
 {{test_command}}
 ```
 
+### CI/CD
+
+{{ci_description}}
+
+{{#each ci_steps}}
+- {{.}}
+{{/each}}
+
 ### Deploy
 
 {{#each deploy_targets}}
 #### {{name}}
-
 {{instructions}}
-
 {{/each}}
 
 ### Scripts
@@ -368,22 +169,196 @@ Key files:
 | Script | Purpose |
 |--------|---------|
 {{#each scripts}}
-| {{name}} | {{purpose}} |
+| `{{name}}` | {{purpose}} |
 {{/each}}
 
-### CI/CD
+---
 
-{{ci_description}}
+## Feature List
 
-### Monitoring
+**Consolidated feature inventory.**
 
-{{#each monitoring}}
-- **{{type}}**: {{description}}
+{{#if feature_groups}}
+{{#each feature_groups}}
+### {{category}}
+{{#each items}}
+- {{.}}
 {{/each}}
 
-### Operations Confidence
-- Setup detection: {{setup_confidence}}%
-- Deploy detection: {{deploy_confidence}}%
+{{/each}}
+{{else}}
+{{#each all_features}}
+- {{.}}
+{{/each}}
+{{/if}}
+
+{{#if features_condensed}}
+*Note: {{features_condensed_count}} similar features consolidated into groups above.*
+{{/if}}
+
+---
+
+## Architecture
+
+**How is this system structured?**
+
+### Directory Structure
+
+```
+{{directory_tree}}
+```
+
+### Key Paths
+
+| Path | Purpose |
+|------|---------|
+{{#each key_paths}}
+| `{{path}}` | {{purpose}} |
+{{/each}}
+
+### Entry Points
+
+{{#each entry_points}}
+- **{{file}}**: {{purpose}}
+{{/each}}
+
+### Layers
+
+{{#each layers}}
+#### {{name}}
+{{description}}
+
+Key files:
+{{#each files}}
+- `{{.}}`
+{{/each}}
+
+{{/each}}
+
+### Data Flow
+
+{{data_flow_description}}
+
+### Architecture Patterns
+
+{{#each patterns}}
+- **{{name}}**: {{description}}
+{{/each}}
+
+---
+
+## Domain Model
+
+**Core business entities and their relationships.**
+
+### Entities
+
+{{#each entities}}
+#### {{name}}
+
+| Attribute | Type | Constraints |
+|-----------|------|-------------|
+{{#each attributes}}
+| {{name}} | {{type}} | {{constraints}} |
+{{/each}}
+
+{{/each}}
+
+{{#if no_entities}}
+*No domain entities detected. This may be a utility library or infrastructure project.*
+{{/if}}
+
+### Relationships
+
+{{#each relationships}}
+- **{{from}}** {{cardinality}} **{{to}}** {{#if via}}(via {{via}}){{/if}}
+{{/each}}
+
+### State Machines
+
+{{#each state_machines}}
+#### {{entity}}.{{field}}
+
+States: {{states}}
+
+Transitions:
+{{#each transitions}}
+- {{from}} → {{to}} {{#if trigger}}on {{trigger}}{{/if}}
+{{/each}}
+
+{{/each}}
+
+### Invariants
+
+{{#each invariants}}
+- {{description}} `[{{entity}}]`
+{{/each}}
+
+---
+
+## Conventions
+
+**Coding standards and patterns.**
+
+### Naming Conventions
+
+| Element | Pattern | Example |
+|---------|---------|---------|
+{{#each naming}}
+| {{element}} | {{pattern}} | `{{example}}` |
+{{/each}}
+
+### File Organization
+
+{{file_organization}}
+
+### Code Style
+
+{{#each style_rules}}
+- {{.}}
+{{/each}}
+
+### Testing Patterns
+
+| Type | Location | Pattern |
+|------|----------|---------|
+{{#each test_patterns}}
+| {{type}} | `{{location}}` | {{pattern}} |
+{{/each}}
+
+---
+
+## Constraints
+
+**Limitations, requirements, and security considerations.**
+
+### Security
+
+{{#each security}}
+- **{{category}}**: {{description}}
+{{/each}}
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+{{#each env_vars}}
+| `{{name}}` | {{required}} | {{description}} |
+{{/each}}
+
+### Compatibility
+
+| Requirement | Value |
+|-------------|-------|
+{{#each compatibility}}
+| {{name}} | {{value}} |
+{{/each}}
+
+### Known Limitations
+
+{{#each limitations}}
+- {{.}}
+{{/each}}
 
 ---
 
@@ -403,20 +378,6 @@ Key files:
 - **{{section}}**: {{detail}}
 {{/each}}
 
-### Conflicts
-
-{{#each conflicts}}
-#### {{section}}
-
-{{description}}
-
-Sources:
-{{#each sources}}
-- {{.}}
-{{/each}}
-
-{{/each}}
-
 ### Recommended Follow-up
 
 {{#each followup}}
@@ -425,24 +386,22 @@ Sources:
 
 ---
 
-## Extraction Details
+## Metadata
 
-### Phases Completed
+| Field | Value |
+|-------|-------|
+| Repository | {{repository_url}} |
+| Branch | {{branch}} |
+| Commit | {{commit_sha}} |
+| License | {{license}} |
+| Maintainers | {{maintainers}} |
+| Extracted | {{extraction_timestamp}} |
+| Extractor Version | {{extractor_version}} |
+
+### Extraction Phases
 
 | Phase | Status | Confidence |
 |-------|--------|------------|
-| Phase 1: Reconnaissance | {{phase1_status}} | {{phase1_confidence}}% |
-| Phase 2: Deep Analysis | {{phase2_status}} | {{phase2_confidence}}% |
-| Phase 3: Synthesis | {{phase3_status}} | {{phase3_confidence}}% |
-
-### Files Analyzed
-
-- Total files: {{files_total}}
-- Files processed: {{files_processed}}
-- Files skipped: {{files_skipped}}
-
-### Extraction Log
-
-```
-{{extraction_log}}
-```
+| Reconnaissance | {{phase1_status}} | {{phase1_confidence}}% |
+| Deep Analysis | {{phase2_status}} | {{phase2_confidence}}% |
+| Synthesis | {{phase3_status}} | {{phase3_confidence}}% |
