@@ -13,7 +13,7 @@ cd dna-extractor
 # Extract DNA from a codebase
 /dna-extractor /path/to/your/repo
 
-# Output: DNA.md in the target directory
+# Output: PROJECT_DNA.md in current working directory
 ```
 
 ## What is DNA Extraction?
@@ -62,7 +62,7 @@ The installer creates:
 # Extract DNA from a specific path
 /dna-extractor /path/to/repo
 
-# Output is written to DNA.md in the target directory
+# Output is written to PROJECT_DNA.md in current working directory
 ```
 
 ### Extraction Levels
@@ -111,7 +111,7 @@ Arguments:
 Options:
   --level=<level>       Extraction depth: snapshot, skeleton, standard, comprehensive
                         (default: standard)
-  --output=<file>       Output file path (default: DNA.md in target directory)
+  --output=<file>       Output file path (default: PROJECT_DNA.md in cwd)
   --help                Show help message
 ```
 
