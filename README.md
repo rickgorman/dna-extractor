@@ -14,8 +14,8 @@ cd dna-extractor
 
 ### Extract DNA from a codebase
 
-```bash
-/dna-extractor /path/to/your/repo
+```
+/dna-extractor <path|url>
 ```
 
 Output: `PROJECT_DNA.md` in current working directory
