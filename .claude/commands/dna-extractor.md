@@ -1,6 +1,6 @@
 ---
 description: Extract DNA (codebase structure/conventions) from a repository
-allowed-tools: Read, Glob, Grep, Bash, Task
+allowed-tools: Read, Glob, Grep, Bash, Task, TaskOutput
 argument-hint: <repo-path> [--level=standard]
 ---
 
@@ -19,54 +19,124 @@ Levels:
 - `standard` (~30 min): Full extraction (default)
 - `comprehensive` (~2 hrs): + Negative space, git history
 
-## Execution
+## Execution Strategy
+
+**CRITICAL: Maximize parallelization. Minimize main context usage.**
+
+Use the Task tool to spawn subtasks that run in parallel. Keep analysis work in subtasks until results are ready to synthesize. Only return to main context for final assembly.
 
 Target repository: $ARGUMENTS
 
-### Phase 1: Reconnaissance (Parallel)
+---
 
-Run these scouts in parallel to gather initial findings:
+## Phase 1: Reconnaissance (PARALLEL)
 
-1. **Structure Scout**: Detect languages, frameworks, directory layout, monorepo signals
-   - Reference: @prompts/phase1/structure-scout.md
+**Launch ALL scouts simultaneously using Task tool with `run_in_background: true`:**
 
-2. **Config Scout**: Parse configuration files (package.json, pyproject.toml, etc.)
+```
+Task 1: Structure Scout
+- Detect languages from file extensions
+- Identify frameworks (package.json, requirements.txt, Cargo.toml, etc.)
+- Map directory layout
+- Check for monorepo signals
+- Reference: @prompts/phase1/structure-scout.md
 
-3. **Entry Point Scout**: Find main entry points, CLI commands, API endpoints
+Task 2: Config Scout
+- Parse package.json, pyproject.toml, Cargo.toml, go.mod
+- Extract dependencies, scripts, metadata
+- Identify build tools, test frameworks
 
-4. **Schema Scout**: Detect database schemas, migrations, data models
+Task 3: Entry Point Scout
+- Find main/index files
+- Detect CLI entry points (bin/, scripts)
+- Identify API entry points (routes, controllers)
+- Find test entry points
 
-### Phase 2: Deep Analysis (Parallel)
+Task 4: Schema Scout
+- Detect database schemas (migrations, schema.rb, prisma)
+- Find ORM models
+- Identify data structures
+```
 
-Based on Phase 1 findings, run specialists:
+**Spawn all 4 scouts in a SINGLE message with multiple Task tool calls.**
 
-1. **Domain Modeler**: Extract entities, relationships, state machines, invariants
-   - Reference: @prompts/phase2/domain-modeler.md
+Wait for all scouts to complete using TaskOutput before proceeding.
 
-2. **API Extractor**: Document API endpoints, request/response schemas
+---
 
-3. **Test Analyst**: Analyze test coverage, patterns, fixtures
+## Phase 2: Deep Analysis (PARALLEL)
 
-4. **Security Analyst**: Identify auth patterns, security constraints
+**Based on Phase 1 findings, launch specialists in parallel:**
 
-5. **Convention Extractor**: Detect coding conventions, naming patterns
+```
+Task 5: Domain Modeler (if models detected)
+- Extract entities, attributes, types
+- Map relationships (has_many, belongs_to, foreign keys)
+- Detect state machines
+- Identify invariants/validations
+- Reference: @prompts/phase2/domain-modeler.md
 
-6. **Infrastructure Analyst**: Parse IaC, deployment configs, observability
-   - Reference: @prompts/phase2/infrastructure-analyst.md
+Task 6: API Extractor (if API detected)
+- Document endpoints (routes, methods)
+- Extract request/response schemas
+- Identify authentication patterns
 
-### Phase 3: Synthesis (Sequential)
+Task 7: Test Analyst (if tests detected)
+- Analyze test structure and patterns
+- Identify fixtures, factories
+- Note coverage patterns
 
-1. **Conflict Resolver**: Resolve conflicting findings between agents
+Task 8: Security Analyst
+- Identify auth mechanisms
+- Find security middleware
+- Note encryption/secrets handling
 
-2. **Confidence Scorer**: Annotate findings with certainty levels
+Task 9: Convention Extractor
+- Detect naming conventions
+- Identify code style patterns
+- Note documentation patterns
+
+Task 10: Infrastructure Analyst (if IaC detected)
+- Parse Dockerfile, docker-compose
+- Analyze Terraform/CloudFormation
+- Identify CI/CD patterns
+- Reference: @prompts/phase2/infrastructure-analyst.md
+```
+
+**Spawn ALL applicable specialists in a SINGLE message.**
+
+Use `run_in_background: true` for each. Collect results with TaskOutput.
+
+---
+
+## Phase 3: Synthesis (SEQUENTIAL)
+
+Only after Phase 2 completes, run synthesis in main context:
+
+1. **Conflict Resolution**: Merge findings, resolve contradictions
+2. **Confidence Scoring**: Rate each finding (certain/inferred/speculated)
    - Reference: @prompts/phase3/confidence-scorer.md
-
-3. **DNA Renderer**: Generate final DNA document
+3. **DNA Rendering**: Generate final output using template
    - Reference: @templates/dna-template.md
+
+---
+
+## Parallelization Rules
+
+1. **Always batch Task calls**: Send multiple Task tool calls in ONE message
+2. **Use background mode**: Set `run_in_background: true` for all scouts/specialists
+3. **Defer to subtasks**: Push ALL analysis work into subtasks
+4. **Main context = assembly only**: Only use main context for:
+   - Launching tasks
+   - Collecting results (TaskOutput)
+   - Final synthesis
+5. **No redundant reads**: Subtasks read files, main context just assembles
+
+---
 
 ## Output Format
 
-Generate structured YAML with these sections:
+Generate structured YAML:
 
 ```yaml
 dna:
@@ -122,6 +192,8 @@ dna:
     extraction_level: <level>
 ```
 
+---
+
 ## Help
 
 If invoked with `--help`, display:
@@ -143,8 +215,18 @@ Examples:
   /dna-extractor ~/projects/myapp --level=comprehensive
 ```
 
+---
+
 ## Begin Extraction
 
 If `--help` was passed, show help and stop.
 
-Otherwise, begin DNA extraction for: $ARGUMENTS
+Otherwise:
+
+1. Parse arguments from: $ARGUMENTS
+2. Launch Phase 1 scouts (4 parallel background tasks)
+3. Collect Phase 1 results
+4. Launch Phase 2 specialists (up to 6 parallel background tasks based on findings)
+5. Collect Phase 2 results
+6. Run Phase 3 synthesis in main context
+7. Output final DNA
