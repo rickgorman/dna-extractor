@@ -4,7 +4,7 @@
 # Interactive installer for the /dna-extractor Claude Code command
 #
 
-set -euo pipefail
+set -eo pipefail
 
 # Colors for output
 RED='\033[0;31m'
@@ -14,8 +14,26 @@ BLUE='\033[0;34m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
-# Get the directory where this script lives
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Repo URL for cloning when script is piped
+REPO_URL="https://github.com/rickgorman/dna-extractor.git"
+
+# Detect if script is being piped (curl | bash) or run from a file
+if [[ -n "${BASH_SOURCE[0]:-}" && "${BASH_SOURCE[0]}" != "bash" && -f "${BASH_SOURCE[0]}" ]]; then
+    # Running from a file - use relative path
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    TEMP_CLONE=""
+else
+    # Piped via curl or similar - need to clone the repo first
+    echo -e "${BLUE}[INFO]${NC} Detected piped installation, cloning repository..."
+    TEMP_CLONE="$(mktemp -d)"
+    if ! git clone --quiet "$REPO_URL" "$TEMP_CLONE" 2>/dev/null; then
+        echo -e "${RED}[ERROR]${NC} Failed to clone repository" >&2
+        rm -rf "$TEMP_CLONE"
+        exit 1
+    fi
+    SCRIPT_DIR="$TEMP_CLONE"
+fi
+
 COMMAND_SOURCE="${SCRIPT_DIR}/.claude/commands/dna-extractor.md"
 
 # Installation location for personal commands
@@ -101,9 +119,14 @@ explain_actions() {
     echo "  1. Create the commands directory (if needed):"
     echo "     ${COMMANDS_DIR}"
     echo ""
-    echo "  2. Create a symlink for the /dna-extractor command:"
-    echo "     ${COMMAND_TARGET}"
-    echo "     -> ${COMMAND_SOURCE}"
+    if [[ -n "$TEMP_CLONE" ]]; then
+        echo "  2. Copy the /dna-extractor command file to:"
+        echo "     ${COMMAND_TARGET}"
+    else
+        echo "  2. Create a symlink for the /dna-extractor command:"
+        echo "     ${COMMAND_TARGET}"
+        echo "     -> ${COMMAND_SOURCE}"
+    fi
     echo ""
     echo "After installation:"
     echo "  - Restart Claude Code (or start a new session)"
@@ -124,16 +147,21 @@ perform_installation() {
 
     case "$existing" in
         "up_to_date")
-            info "Symlink already exists and is correct."
-            return 0
+            if [[ -z "$TEMP_CLONE" ]]; then
+                info "Symlink already exists and is correct."
+                return 0
+            fi
+            # For piped install, we'll replace anyway since source is temp
+            warn "Updating existing installation"
+            rm "$COMMAND_TARGET"
             ;;
         different:*)
             local old_target="${existing#different:}"
-            warn "Updating symlink (was: $old_target)"
+            warn "Updating installation (was: $old_target)"
             rm "$COMMAND_TARGET"
             ;;
         "file_exists")
-            warn "Replacing existing file with symlink"
+            warn "Replacing existing file"
             rm "$COMMAND_TARGET"
             ;;
         "none")
@@ -141,16 +169,27 @@ perform_installation() {
             ;;
     esac
 
-    # Create the symlink
-    ln -s "$COMMAND_SOURCE" "$COMMAND_TARGET"
-
-    # Verify
-    if [[ -L "$COMMAND_TARGET" ]]; then
-        info "Symlink created successfully"
-        return 0
+    # Install: copy for piped install, symlink for local install
+    if [[ -n "$TEMP_CLONE" ]]; then
+        # Piped install - copy the file (symlink would break when temp is cleaned)
+        cp "$COMMAND_SOURCE" "$COMMAND_TARGET"
+        if [[ -f "$COMMAND_TARGET" ]]; then
+            info "Command file copied successfully"
+            return 0
+        else
+            error "Failed to copy command file"
+            return 1
+        fi
     else
-        error "Failed to create symlink"
-        return 1
+        # Local install - create symlink
+        ln -s "$COMMAND_SOURCE" "$COMMAND_TARGET"
+        if [[ -L "$COMMAND_TARGET" ]]; then
+            info "Symlink created successfully"
+            return 0
+        else
+            error "Failed to create symlink"
+            return 1
+        fi
     fi
 }
 
@@ -222,7 +261,15 @@ main() {
     fi
 }
 
+# Cleanup function
+cleanup() {
+    if [[ -n "${TEMP_CLONE:-}" && -d "${TEMP_CLONE:-}" ]]; then
+        rm -rf "$TEMP_CLONE"
+    fi
+}
+trap cleanup EXIT
+
 # Run main unless sourced
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ -z "${BASH_SOURCE[0]:-}" || "${BASH_SOURCE[0]}" == "${0}" || "${BASH_SOURCE[0]}" == "bash" ]]; then
     main "$@"
 fi
