@@ -4,17 +4,21 @@ Extract the "DNA" of any codebase - conventions, patterns, architecture, and tri
 
 ## Quick Start
 
+### Clone and install
+
 ```bash
-# Clone and install
 gh repo clone rickgorman/dna-extractor
 cd dna-extractor
 ./install.sh
-
-# Extract DNA from a codebase
-/dna-extractor /path/to/your/repo
-
-# Output: PROJECT_DNA.md in current working directory
 ```
+
+### Extract DNA from a codebase
+
+```bash
+/dna-extractor /path/to/your/repo
+```
+
+Output: `PROJECT_DNA.md` in current working directory
 
 ## What is DNA Extraction?
 
