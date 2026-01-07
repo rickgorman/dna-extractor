@@ -15,7 +15,7 @@ cd dna-extractor
 ### Extract DNA from a codebase
 
 ```
-/dna-extractor <path|url>
+/dna-extractor <path-to-project|url-to-repo>
 ```
 
 Output: `PROJECT_DNA.md` in current working directory
