@@ -33,6 +33,7 @@ accumulated_data:
     convention_extractor: {...}
     infrastructure_analyst: {...}
     negative_space_detector: {...}
+    user_story_extractor: {...}
   phase3:
     conflict_resolver: {...}
     confidence_scorer: {...}
@@ -47,11 +48,11 @@ Map accumulated data to DNA template sections in this order:
 | Order | DNA Section | Primary Sources | Secondary Sources |
 |-------|-------------|-----------------|-------------------|
 | 1 | Identity | structure_scout, config_scout | convention_extractor |
-| 2 | Primary User Stories | test_analyst, api_extractor | domain_modeler |
+| 2 | Primary User Stories | user_story_extractor | test_analyst, api_extractor |
 | 3 | Capabilities | api_extractor, entry_point_scout | test_analyst |
 | 4 | Stack | structure_scout, config_scout | infrastructure_analyst |
 | 5 | Operations | infrastructure_analyst, config_scout | convention_extractor |
-| 6 | Feature List | api_extractor, entry_point_scout, test_analyst | domain_modeler |
+| 6 | Feature List | user_story_extractor, api_extractor | entry_point_scout, test_analyst |
 | 7 | Architecture | structure_scout, infrastructure_analyst | convention_extractor |
 | 8 | Domain Model | domain_modeler, schema_scout | test_analyst |
 | 9 | Conventions | convention_extractor | test_analyst, security_analyst |
