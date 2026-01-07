@@ -1,6 +1,6 @@
 ---
 description: Extract DNA (codebase structure/conventions) from a repository
-allowed-tools: Read, Glob, Grep, Bash, Task, TaskOutput
+allowed-tools: Read, Write, Glob, Grep, Bash, Task, TaskOutput
 argument-hint: <repo-path> [--level=standard]
 ---
 
@@ -217,6 +217,40 @@ Examples:
 
 ---
 
+## Output File Naming
+
+**CRITICAL: Never clobber existing DNA files.**
+
+1. Extract project name from repo path:
+   - `/path/to/bar-project` → `bar-project`
+   - `https://github.com/foo/bar-project.git` → `bar-project`
+   - Use basename, strip `.git` suffix if present
+
+2. Convert to safe filename:
+   - Uppercase all letters
+   - Replace non-word chars (except underscores) with underscores
+   - Remove consecutive underscores
+   - Example: `bar-project` → `BAR_PROJECT`
+
+3. Append `_DNA.md`:
+   - Base: `BAR_PROJECT_DNA.md`
+
+4. Check for existing files and increment if needed:
+   - If `BAR_PROJECT_DNA.md` exists → `BAR_PROJECT_DNA_002.md`
+   - If `BAR_PROJECT_DNA_002.md` exists → `BAR_PROJECT_DNA_003.md`
+   - Continue incrementing until unique filename found
+
+5. Write file to **current working directory** (where command was invoked)
+
+6. After writing, display:
+   ```
+   DNA extraction complete!
+
+   Output saved to: /full/path/to/BAR_PROJECT_DNA.md
+   ```
+
+---
+
 ## Begin Extraction
 
 If `--help` was passed, show help and stop.
@@ -224,9 +258,11 @@ If `--help` was passed, show help and stop.
 Otherwise:
 
 1. Parse arguments from: $ARGUMENTS
-2. Launch Phase 1 scouts (4 parallel background tasks)
-3. Collect Phase 1 results
-4. Launch Phase 2 specialists (up to 6 parallel background tasks based on findings)
-5. Collect Phase 2 results
-6. Run Phase 3 synthesis in main context
-7. Output final DNA
+2. Determine output filename (see Output File Naming above)
+3. Launch Phase 1 scouts (4 parallel background tasks)
+4. Collect Phase 1 results
+5. Launch Phase 2 specialists (up to 6 parallel background tasks based on findings)
+6. Collect Phase 2 results
+7. Run Phase 3 synthesis in main context
+8. Write DNA to output file (never clobber existing)
+9. Display full path to created file
