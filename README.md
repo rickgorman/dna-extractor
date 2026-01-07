@@ -76,9 +76,9 @@ DNA Extractor supports four extraction levels for different needs:
 | Level | Time | Scope | Use Case |
 |-------|------|-------|----------|
 | `snapshot` | ~2 min | Languages, frameworks, structure | Quick overview |
-| `skeleton` | ~10 min | + Entry points, core entities | Planning/estimation |
-| `standard` | ~30 min | Full extraction (default) | Most projects |
-| `comprehensive` | ~2 hrs | + Negative space, git history | Large/complex projects |
+| `skeleton` | 3-10 min | + Entry points, core entities | Planning/estimation |
+| `standard` | 10-15 min | Full extraction (default) | Most projects |
+| `comprehensive` | 15+ min | + Negative space, git history | Large/complex projects |
 
 ```bash
 # Quick snapshot (languages and frameworks only)
@@ -269,7 +269,7 @@ For large codebases, use a lower extraction level:
 /dna-extractor /path/to/repo --level=skeleton
 ```
 
-The `skeleton` level provides useful output in ~10 minutes vs ~30 minutes for `standard`.
+The `skeleton` level provides useful output in 3-10 minutes vs 10-15 minutes for `standard`.
 
 ### Low confidence scores
 

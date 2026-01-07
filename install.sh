@@ -14,9 +14,20 @@ BLUE='\033[0;34m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
-# Get the directory where this script lives
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-COMMAND_SOURCE="${SCRIPT_DIR}/.claude/commands/dna-extractor.md"
+# Detect if running from pipe (curl | bash) or from file
+if [[ -z "${BASH_SOURCE[0]:-}" || "${BASH_SOURCE[0]}" == "bash" ]]; then
+    # Running from pipe - will fetch from GitHub
+    PIPED_MODE=true
+    SCRIPT_DIR=""
+    COMMAND_SOURCE=""
+    REPO_RAW_URL="https://raw.githubusercontent.com/rickgorman/dna-extractor/main"
+else
+    # Running from file
+    PIPED_MODE=false
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    COMMAND_SOURCE="${SCRIPT_DIR}/.claude/commands/dna-extractor.md"
+    REPO_RAW_URL=""
+fi
 
 # Installation location for personal commands
 COMMANDS_DIR="${HOME}/.claude/commands"
@@ -55,15 +66,28 @@ prompt() {
 
 check_existing_installation() {
     if [[ -L "$COMMAND_TARGET" ]]; then
-        local current_target
-        current_target="$(readlink "$COMMAND_TARGET" 2>/dev/null || echo "")"
-        if [[ "$current_target" == "$COMMAND_SOURCE" ]]; then
-            echo "up_to_date"
-        else
+        # It's a symlink
+        if [[ "$PIPED_MODE" == true ]]; then
+            # In piped mode, any symlink is "different" since we want a file
+            local current_target
+            current_target="$(readlink "$COMMAND_TARGET" 2>/dev/null || echo "")"
             echo "different:$current_target"
+        else
+            local current_target
+            current_target="$(readlink "$COMMAND_TARGET" 2>/dev/null || echo "")"
+            if [[ "$current_target" == "$COMMAND_SOURCE" ]]; then
+                echo "up_to_date"
+            else
+                echo "different:$current_target"
+            fi
         fi
     elif [[ -e "$COMMAND_TARGET" ]]; then
-        echo "file_exists"
+        if [[ "$PIPED_MODE" == true ]]; then
+            # In piped mode, existing file might be up to date - check later
+            echo "file_exists"
+        else
+            echo "file_exists"
+        fi
     else
         echo "none"
     fi
@@ -101,9 +125,14 @@ explain_actions() {
     echo "  1. Create the commands directory (if needed):"
     echo "     ${COMMANDS_DIR}"
     echo ""
-    echo "  2. Create a symlink for the /dna-extractor command:"
-    echo "     ${COMMAND_TARGET}"
-    echo "     -> ${COMMAND_SOURCE}"
+    if [[ "$PIPED_MODE" == true ]]; then
+        echo "  2. Download the /dna-extractor command from GitHub:"
+        echo "     ${COMMAND_TARGET}"
+    else
+        echo "  2. Create a symlink for the /dna-extractor command:"
+        echo "     ${COMMAND_TARGET}"
+        echo "     -> ${COMMAND_SOURCE}"
+    fi
     echo ""
     echo "After installation:"
     echo "  - Restart Claude Code (or start a new session)"
@@ -124,7 +153,11 @@ perform_installation() {
 
     case "$existing" in
         "up_to_date")
-            info "Symlink already exists and is correct."
+            if [[ "$PIPED_MODE" == true ]]; then
+                info "Command file already exists."
+            else
+                info "Symlink already exists and is correct."
+            fi
             return 0
             ;;
         different:*)
@@ -133,7 +166,11 @@ perform_installation() {
             rm "$COMMAND_TARGET"
             ;;
         "file_exists")
-            warn "Replacing existing file with symlink"
+            if [[ "$PIPED_MODE" == true ]]; then
+                warn "Replacing existing file"
+            else
+                warn "Replacing existing file with symlink"
+            fi
             rm "$COMMAND_TARGET"
             ;;
         "none")
@@ -141,16 +178,29 @@ perform_installation() {
             ;;
     esac
 
-    # Create the symlink
-    ln -s "$COMMAND_SOURCE" "$COMMAND_TARGET"
-
-    # Verify
-    if [[ -L "$COMMAND_TARGET" ]]; then
-        info "Symlink created successfully"
-        return 0
+    if [[ "$PIPED_MODE" == true ]]; then
+        # Download the command file from GitHub
+        local remote_url="${REPO_RAW_URL}/.claude/commands/dna-extractor.md"
+        info "Downloading from: $remote_url"
+        if curl -fsSL "$remote_url" -o "$COMMAND_TARGET"; then
+            info "Command file downloaded successfully"
+            return 0
+        else
+            error "Failed to download command file"
+            return 1
+        fi
     else
-        error "Failed to create symlink"
-        return 1
+        # Create the symlink
+        ln -s "$COMMAND_SOURCE" "$COMMAND_TARGET"
+
+        # Verify
+        if [[ -L "$COMMAND_TARGET" ]]; then
+            info "Symlink created successfully"
+            return 0
+        else
+            error "Failed to create symlink"
+            return 1
+        fi
     fi
 }
 
@@ -161,8 +211,8 @@ perform_installation() {
 main() {
     print_header
 
-    # Check if source command file exists
-    if [[ ! -f "$COMMAND_SOURCE" ]]; then
+    # Check if source command file exists (only in local mode)
+    if [[ "$PIPED_MODE" == false && ! -f "$COMMAND_SOURCE" ]]; then
         error "Command file not found: $COMMAND_SOURCE"
         error "Please ensure .claude/commands/dna-extractor.md exists."
         exit 1
@@ -223,6 +273,7 @@ main() {
 }
 
 # Run main unless sourced
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+# In piped mode, BASH_SOURCE[0] is empty, so we also check for that
+if [[ -z "${BASH_SOURCE[0]:-}" || "${BASH_SOURCE[0]}" == "${0}" ]]; then
     main "$@"
 fi

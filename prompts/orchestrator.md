@@ -53,7 +53,7 @@ phase3:
 ```
 **Output**: Languages, frameworks, basic structure
 
-#### `skeleton` (~10 minutes)
+#### `skeleton` (~3-10 minutes)
 ```yaml
 phase1:
   - structure-scout
@@ -67,7 +67,7 @@ phase3:
 ```
 **Output**: + Entry points, dependencies, basic conventions
 
-#### `standard` (~30 minutes) - Default
+#### `standard` (~10-15 minutes) - Default
 ```yaml
 phase1:
   - structure-scout
@@ -86,7 +86,7 @@ phase3:
 ```
 **Output**: Complete extraction for typical projects
 
-#### `comprehensive` (~2 hours)
+#### `comprehensive` (~15+ minutes)
 ```yaml
 phase1:
   - structure-scout (extended)
