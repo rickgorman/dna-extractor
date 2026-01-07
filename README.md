@@ -1,6 +1,6 @@
 # DNA Extractor
 
-Extract the "DNA" of any codebase - conventions, patterns, architecture, and tribal knowledge - into structured documentation that AI assistants can use to understand and work with your code effectively.
+Extract the "DNA" of any codebase - conventions, patterns, architecture, and tribal knowledge - into structured documentation that AI assistants can use to understand and work with that code effectively.
 
 ## Quick Start
 
