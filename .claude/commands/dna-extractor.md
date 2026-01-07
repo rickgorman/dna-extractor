@@ -2,6 +2,7 @@
 description: Extract DNA (codebase structure/conventions) from a repository
 allowed-tools: Read, Write, Glob, Grep, Bash, Task, TaskOutput
 argument-hint: <repo-path> [--level=standard]
+version: "0.1"
 ---
 
 # DNA Extractor
@@ -199,7 +200,7 @@ dna:
 If invoked with `--help`, display:
 
 ```
-DNA Extractor - Extract codebase DNA
+DNA Extractor v0.1 - Extract codebase DNA
 
 Usage: /dna-extractor <repo-path> [--level=standard]
 
@@ -272,8 +273,8 @@ Otherwise:
 
 2. **Display intro immediately:**
    ```
-   DNA Extractor
-   =============
+   DNA Extractor v0.1
+   ==================
    Scanning: {project_name}
 
    Phases:
@@ -290,8 +291,8 @@ Otherwise:
 ```
 $ /dna-extractor /path/to/myproject --level=standard
 
-DNA Extractor
-=============
+DNA Extractor v0.1
+==================
 Scanning: myproject
 
 Phases:
@@ -306,8 +307,8 @@ Starting Phase 1...
 ```
 $ /dna-extractor https://github.com/foo/bar.git
 
-DNA Extractor
-=============
+DNA Extractor v0.1
+==================
 Cloning: bar (from github.com/foo)
 
 Phases:

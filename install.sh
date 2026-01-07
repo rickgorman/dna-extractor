@@ -108,7 +108,6 @@ explain_actions() {
     echo "After installation:"
     echo "  - Restart Claude Code (or start a new session)"
     echo -e "  - Type ${BOLD}/dna-extractor${NC} to use the command"
-    echo -e "  - The command will appear in ${BOLD}/help${NC} output"
     echo ""
 }
 
@@ -209,8 +208,7 @@ main() {
         echo ""
         echo "Next steps:"
         echo "  1. Restart Claude Code (or start a new conversation)"
-        echo "  2. Type /help to see /dna-extractor in the command list"
-        echo "  3. Run: /dna-extractor /path/to/repo"
+        echo "  2. Run: /dna-extractor /path/to/repo"
         echo ""
         echo "Usage:"
         echo "  /dna-extractor <repo-path>              # Full extraction"
