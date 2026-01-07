@@ -38,21 +38,92 @@ accumulated_data:
     confidence_scorer: {...}
 ```
 
-### 2. Section Mapping
+### 2. Section Mapping (Human-First Order)
 
-Map accumulated data to DNA template sections:
+**IMPORTANT:** Sections are ordered for human/agent readability - actionable info first, technical details later.
 
-| DNA Section | Primary Sources | Secondary Sources |
-|-------------|-----------------|-------------------|
-| Identity | structure_scout, config_scout | convention_extractor |
-| Domain Model | domain_modeler, schema_scout | test_analyst |
-| Capabilities | api_extractor, entry_point_scout | test_analyst |
-| Architecture | structure_scout, infrastructure_analyst | convention_extractor |
-| Stack | structure_scout, config_scout | infrastructure_analyst |
-| Conventions | convention_extractor | test_analyst, security_analyst |
-| Constraints | security_analyst, negative_space_detector | convention_extractor |
-| Operations | infrastructure_analyst, config_scout | convention_extractor |
-| Uncertainties | all agents | conflict_resolver |
+Map accumulated data to DNA template sections in this order:
+
+| Order | DNA Section | Primary Sources | Secondary Sources |
+|-------|-------------|-----------------|-------------------|
+| 1 | Identity | structure_scout, config_scout | convention_extractor |
+| 2 | Primary User Stories | test_analyst, api_extractor | domain_modeler |
+| 3 | Capabilities | api_extractor, entry_point_scout | test_analyst |
+| 4 | Stack | structure_scout, config_scout | infrastructure_analyst |
+| 5 | Operations | infrastructure_analyst, config_scout | convention_extractor |
+| 6 | Feature List | api_extractor, entry_point_scout, test_analyst | domain_modeler |
+| 7 | Architecture | structure_scout, infrastructure_analyst | convention_extractor |
+| 8 | Domain Model | domain_modeler, schema_scout | test_analyst |
+| 9 | Conventions | convention_extractor | test_analyst, security_analyst |
+| 10 | Constraints | security_analyst, negative_space_detector | convention_extractor |
+| 11 | Uncertainties | all agents | conflict_resolver |
+| 12 | Metadata | all sources | - |
+
+### 2.1 User Story Extraction
+
+Extract 2-4 primary user stories from test descriptions, README, and API patterns:
+
+```yaml
+user_story_sources:
+  - test_descriptions: "it 'allows user to...'" patterns
+  - readme_examples: Usage examples in documentation
+  - api_naming: RESTful resource names imply actors
+  - cli_commands: Command descriptions reveal intent
+
+extraction_rules:
+  - Identify WHO (actor): developer, end-user, admin, system
+  - Identify WHAT (goal): the action/feature
+  - Identify WHY (benefit): inferred from context
+
+example_mapping:
+  - test: "it 'creates a new order for authenticated users'"
+    story: "As a user, I want to create orders, so that I can purchase products."
+  - api: "POST /api/webhooks"
+    story: "As a developer, I want to register webhooks, so that I receive event notifications."
+```
+
+### 2.2 Feature Consolidation
+
+When feature count exceeds 30 items, consolidate into groups:
+
+```yaml
+consolidation_rules:
+  threshold: 30  # Trigger consolidation above this count
+  max_groups: 8  # Maximum category groups
+  max_per_group: 10  # Items per group before sub-consolidation
+
+grouping_categories:
+  - CRUD Operations: create, read, update, delete patterns
+  - Authentication: login, logout, session, token
+  - Data Management: import, export, sync, backup
+  - Notifications: email, webhook, push, alert
+  - Reporting: analytics, dashboard, charts, export
+  - Admin: settings, configuration, permissions
+  - Integration: API, webhooks, third-party
+  - User Interface: forms, views, components
+
+consolidation_example:
+  before:
+    - Create user
+    - Read user
+    - Update user
+    - Delete user
+    - Create order
+    - Read order
+    - ... (40 more items)
+  after:
+    groups:
+      - category: "CRUD Operations"
+        items:
+          - "User management (CRUD)"
+          - "Order management (CRUD)"
+          - "Product management (CRUD)"
+      - category: "Authentication"
+        items:
+          - "Login/logout"
+          - "Session management"
+    condensed_note: "45 features consolidated into 8 groups"
+```
 
 ### 3. Content Rendering
 
@@ -324,7 +395,7 @@ Adjust output based on extraction level:
 
 ## Output
 
-The output is the final DNA.md document. Structure:
+The output is the final DNA.md document. Structure follows **human-first** ordering:
 
 ```markdown
 # {{project_name}} DNA
@@ -335,13 +406,38 @@ The output is the final DNA.md document. Structure:
 
 ---
 
-## Metadata
-[Repository info, extraction details]
+## Identity
+[Name, one-liner, purpose, type, language]
 
 ---
 
-## Identity
-[Project name, purpose, type, language]
+## Primary User Stories
+[2-4 key stories: As a X, I want Y, so that Z]
+
+---
+
+## Capabilities
+[Core features, API endpoints, CLI commands]
+
+---
+
+## Stack
+[Languages, frameworks, databases, dependencies]
+
+---
+
+## Operations
+[Quick start, build, test, CI/CD, deploy]
+
+---
+
+## Feature List
+[Consolidated feature inventory - grouped if 30+ items]
+
+---
+
+## Architecture
+[Directory structure, entry points, layers, patterns]
 
 ---
 
@@ -350,44 +446,39 @@ The output is the final DNA.md document. Structure:
 
 ---
 
-## Capabilities
-[Features, API endpoints, CLI commands]
-
----
-
-## Architecture
-[Directory structure, layers, patterns]
-
----
-
-## Stack
-[Languages, frameworks, dependencies]
-
----
-
 ## Conventions
-[Naming, style, documentation patterns]
+[Naming, style, testing patterns]
 
 ---
 
 ## Constraints
-[Security, performance, compatibility]
-
----
-
-## Operations
-[Build, test, deploy procedures]
+[Security, env vars, compatibility, limitations]
 
 ---
 
 ## Uncertainties
-[Questions, missing info, conflicts]
+[Questions, missing info, follow-up]
 
 ---
 
-## Extraction Details
-[Phases completed, files analyzed, log]
+## Metadata
+[Repository info, extraction phases]
 ```
+
+### Section Ordering Rationale
+
+1. **Identity** - What is this? (immediate context)
+2. **User Stories** - Who uses it and why? (human value)
+3. **Capabilities** - What can it do? (features)
+4. **Stack** - What's it built with? (tech context)
+5. **Operations** - How do I run it? (actionable)
+6. **Feature List** - Full feature inventory (reference)
+7. **Architecture** - How is it structured? (technical)
+8. **Domain Model** - What are the entities? (deep technical)
+9. **Conventions** - How should I code? (contributor)
+10. **Constraints** - What are the limits? (edge cases)
+11. **Uncertainties** - What's unclear? (gaps)
+12. **Metadata** - Extraction details (appendix)
 
 ### Rendering Report
 
@@ -407,29 +498,39 @@ rendering_report:
     - name: Identity
       status: complete
       confidence: 95
-    - name: Domain Model
+    - name: Primary User Stories
       status: complete
-      confidence: 88
+      confidence: 85
+      stories_count: 3
     - name: Capabilities
       status: partial
       confidence: 75
       missing: ["CLI commands"]
-    - name: Architecture
-      status: complete
-      confidence: 92
     - name: Stack
       status: complete
       confidence: 98
+    - name: Operations
+      status: partial
+      confidence: 70
+      missing: ["Deploy procedures"]
+    - name: Feature List
+      status: complete
+      confidence: 90
+      features_count: 45
+      consolidated: true
+      groups_count: 6
+    - name: Architecture
+      status: complete
+      confidence: 92
+    - name: Domain Model
+      status: complete
+      confidence: 88
     - name: Conventions
       status: complete
       confidence: 85
     - name: Constraints
       status: complete
       confidence: 80
-    - name: Operations
-      status: partial
-      confidence: 70
-      missing: ["Deploy procedures"]
     - name: Uncertainties
       status: complete
       questions_count: 12
