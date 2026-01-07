@@ -107,8 +107,8 @@ explain_actions() {
     echo ""
     echo "After installation:"
     echo "  - Restart Claude Code (or start a new session)"
-    echo "  - Type ${BOLD}/dna-extractor${NC} to use the command"
-    echo "  - The command will appear in ${BOLD}/help${NC} output"
+    echo -e "  - Type ${BOLD}/dna-extractor${NC} to use the command"
+    echo -e "  - The command will appear in ${BOLD}/help${NC} output"
     echo ""
 }
 
